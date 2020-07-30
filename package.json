@@ -1,0 +1,19 @@
+{
+  "name": "ctcapp",
+  "version": "0.9.0",
+  "description": "Sudoku Web App for Cracking The Cryptic",
+  "main": "/public/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/killroy42/ctcapp.git"
+  },
+  "author": "Sven Neumann",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/killroy42/ctcapp/issues"
+  },
+  "homepage": "https://github.com/killroy42/ctcapp#readme"
+}
