@@ -29,13 +29,15 @@ html, body {
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
 	width: 720px; height: 720px;
 	background: #fff;
 	font-family: Tahoma, Verdana, sans-serif;
 }
 .board svg {
 	position: absolute;
-	width: 100%; height: 100%;
 	margin: -60px 0 0 -60px;
 	pointer-events: none;
 	user-select: none;
@@ -44,6 +46,15 @@ html, body {
 	z-index: 2;
 }
 .board svg#overlay {
+	z-index: 5;
+}
+.timeline {
+	position: relative;
+	display: flex;
+	margin-top: 64px;
+}
+.board svg#timeline {
+	position: relative;
 	z-index: 5;
 }
 .grid {
@@ -165,7 +176,7 @@ html, body {
 	justify-content: center;
 	transform-origin: middle center;
 	transform: scale(1.6);
-	padding: 40px;
+	padding: 100px;
 }
 .controls button {
 	display: inline-flex;
