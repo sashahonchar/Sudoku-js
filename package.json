@@ -4,7 +4,7 @@
   "description": "Sudoku Web App for Cracking The Cryptic",
   "main": "/public/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "import": "cd public && node ../scripts/export_codepen.js"
   },
   "repository": {
     "type": "git",
