@@ -632,7 +632,7 @@ const Puzzle = (() => {
 		};
 		P.act = function(action) {
 			var act = typeof action === 'string' ? action : this.actionToString(action);
-			//console.info('Puzzle.act("%s");', act);
+			//console.warn('Puzzle.act("%s");', act);
 			if(action.type !== 'highlight') {
 				var nextHighlightedCells = this.cells.filter(cell => cell.hasState('highlight'));
 				var prevHL = this.cellsToString(this.highlightedCells);
@@ -1080,7 +1080,7 @@ const App = (() => {
 				}
 				return (selVal !== '') ? selFn : undefined;
 			};
-			var cells = [], selector;			
+			var cells = [], selector;
 			switch(this.mode) {
 				case 'normal': selector = makeSelector(cell, ['normal', 'colour', 'centre', 'corner']); break;
 				case 'corner': selector = makeSelector(cell, ['normal', 'corner', 'colour', 'centre']); break;
@@ -1163,31 +1163,30 @@ const App = (() => {
 			if(proceed && this.currentInput !== eventType) this.currentInput = eventType;
 			return proceed;
 		};
+		P.didInputMove = function() {
+			var prevPos = this.specialInputPos, inputPos = this.inputPos;
+			this.specialInputPos = inputPos;
+			return !(prevPos && App.DoubleInputDistance > App.distance(prevPos, inputPos));
+		};
 		P.handleInputdown = function(event) {
 			if(!this.checkInput(event)) return;
-			//console.info('App.handleInputdown(event);', event.type, this.currentInput);
-			var checkSpecialInput = () => {
-				var prevPos = this.specialInputPos, inputPos = this.inputPos;
-				this.specialInputPos = inputPos;
-				if(prevPos && App.DoubleInputDistance > App.distance(prevPos, inputPos)) {
-					this.handleSpecialInput(event);
-				}
-			};
+			//console.info('App.handleInputdown(event);', event.type, this.currentInput, this.waitingForDoubleInput);
 			var {clientX: x, clientY: y} = (event.touches && event.touches[0]) || event;
 			this.inputPos = {x, y};
 			clearTimeout(this.longInputTimoutId);
 			clearTimeout(this.doubleInputTimoutId);
-			if(this.waitingForDoubleInput) {
+			if(this.waitingForDoubleInput && !this.didInputMove()) {
 				this.waitingForDoubleInput = false;
-				checkSpecialInput();
+				this.handleSpecialInput(event);
+				return;
 			}
-			else {
-				var {clientX: x, clientY: y} = (event.touches && event.touches[0]) || event;
-				this.specialInputPos = this.inputPos;
-				this.waitingForDoubleInput = true;
-				this.doubleInputTimoutId = setTimeout(() => this.waitingForDoubleInput = false, App.DoubleInputTimeout);
-				this.longInputTimoutId = setTimeout(checkSpecialInput, App.LongInputTimeout);
-			}
+			var {clientX: x, clientY: y} = (event.touches && event.touches[0]) || event;
+			this.specialInputPos = this.inputPos;
+			this.waitingForDoubleInput = true;
+			this.doubleInputTimoutId = setTimeout(() => this.waitingForDoubleInput = false, App.DoubleInputTimeout);
+			this.longInputTimoutId = setTimeout(() => {
+				if(!this.didInputMove()) this.handleSpecialInput(event);
+			}, App.LongInputTimeout);
 			this.handleDragStart(event);
 		};
 		P.handleInputup = function(event) {
