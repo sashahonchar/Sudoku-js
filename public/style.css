@@ -115,9 +115,9 @@ html, body {
 .pm-7 { left: 80%; top: 50%; }
 .pm-8 { left: 20%; top: 20%; }
 
-.colour-1 { background-color: rgba(0, 0, 0, 0.5); }
-.colour-2 { background-color: rgba(207, 207, 207, 0.5); }
-.colour-3 { background-color: rgba(255, 255, 255, 0.5); }
+.colour-1 { background-color: rgba(255, 255, 255, 0.5); }
+.colour-2 { background-color: rgba(0, 0, 0, 0.5); }
+.colour-3 { background-color: rgba(207, 207, 207, 0.5); }
 .colour-4 { background-color: rgba(163, 224, 72, 0.5); }
 .colour-5 { background-color: rgba(210, 59, 231, 0.5); }
 .colour-6 { background-color: rgba(235, 117, 50, 0.5); }
@@ -267,9 +267,9 @@ html, body {
 	outline: 12px solid white;
 	outline-offset: -20px;
 }
-.mode-colour button[data-control="1"] { outline-color: rgb(0, 0, 0); }
-.mode-colour button[data-control="2"] { outline-color: rgb(207, 207, 207); }
-.mode-colour button[data-control="3"] { outline-color: rgb(255, 255, 255); }
+.mode-colour button[data-control="1"] { outline-color: rgb(255, 255, 255); }
+.mode-colour button[data-control="2"] { outline-color: rgb(0, 0, 0); }
+.mode-colour button[data-control="3"] { outline-color: rgb(207, 207, 207); }
 .mode-colour button[data-control="4"] { outline-color: rgb(163, 224, 72); }
 .mode-colour button[data-control="5"] { outline-color: rgb(210, 59, 231); }
 .mode-colour button[data-control="6"] { outline-color: rgb(235, 117, 50); }
@@ -277,6 +277,27 @@ html, body {
 .mode-colour button[data-control="8"] { outline-color: rgb(247, 208, 56); }
 .mode-colour button[data-control="9"] { outline-color: rgb(52, 187, 230); }
 .mode-colour button[data-control="0"] { outline-color: rgb(95, 95, 95); }
+
+/* Red X on white colour for "clear" */
+.mode-colour button[data-control="1"]:before, .mode-colour button[data-control="1"]:after {
+	content: '';
+	position: absolute;
+	width: 20px;
+	height: 3px;
+	background-color: #f00;
+	border-radius: 2px;
+	box-shadow 0 0 2px 0 #000;
+}
+.mode-colour button[data-control="1"]:before {
+	-webkit-transform: rotate(45deg);
+	-moz-transform: rotate(45deg);
+	transform: rotate(45deg);
+}
+.mode-colour button[data-control="1"]:after {
+	-webkit-transform: rotate(-45deg);
+	-moz-transform: rotate(-45deg);
+	transform: rotate(-45deg);
+}
 
 button.confirm-restart, button.confirm-restart:hover {
 	color: white;

@@ -64,9 +64,13 @@ const Cell = (() => {
 	P.hasState = function(state) {
 		return this.elem.classList.contains(state);
 	};
-	P.clear = function(levels = 0) {
-		//console.info('Cell.clear(%s);', levels);
-		if(this.value !== undefined) {
+	P.clear = function({levels = 0, mode = 'normal'} = {}) {
+		//console.info('Cell.clear({levels = %s, mode = %s});', levels, mode);
+		if(mode === 'colour' && this.colour !== undefined) {
+			this.colour = undefined;
+			this.hideColour();
+		}
+		else if(this.value !== undefined) {
 			this.clearChildElem('cell-value');
 			this.value = undefined;
 			this.showCandidates();
@@ -82,7 +86,7 @@ const Cell = (() => {
 			this.colour = undefined;
 			this.hideColour();
 		}
-		if(levels > 1) return this.clear(levels - 1);
+		if(levels > 1) return this.clear({levels: levels - 1});
 		return this;
 	};
 	// Styles
@@ -296,7 +300,7 @@ const SvgRenderer = (() => {
 		this.svgId = 0;
 	}
 	var P = Object.assign(SvgRenderer.prototype, {constructor: SvgRenderer});
-	P.renderPart = ({target = 'underlay', type, attr = {}, content}) => {
+	P.renderPart = function({target = 'underlay', type, attr = {}, content}) {
 		//console.info('App.renderPart({target, type, attr, content});', target, type, attr, content);
 		var svg = document.querySelector('svg#' + target), svgNS = svg.namespaceURI;
 		var part = document.createElementNS(svgNS, type);
@@ -305,18 +309,20 @@ const SvgRenderer = (() => {
 		svg.appendChild(part);
 		return part;
 	};
-	P.renderLine = ({target = 'overlay', color = 'none', thickness, wayPoints}) => App.renderPart({
-		target, type: 'path',
-		attr: {
-			'fill': 'none',
-			'stroke': color,
-			'stroke-width': thickness,
-			'stroke-linecap': 'round',
-			'stroke-linejoin': 'round',
-			'd': wayPoints.map(([r, c], idx) => `${idx === 0 ? 'M' : 'L'}${64 * c} ${64 * r}`).join(' '),
-		}
-	});
-	P.renderArrow = ({target = 'overlay', color = 'none', thickness, headLength, wayPoints}) => {
+	P.renderLine = function({target = 'overlay', color = 'none', thickness, wayPoints}) {
+		return this.renderPart({
+			target, type: 'path',
+			attr: {
+				'fill': 'none',
+				'stroke': color,
+				'stroke-width': thickness,
+				'stroke-linecap': 'round',
+				'stroke-linejoin': 'round',
+				'd': wayPoints.map(([r, c], idx) => `${idx === 0 ? 'M' : 'L'}${64 * c} ${64 * r}`).join(' '),
+			}
+		});
+	};
+	P.renderArrow = function({target = 'overlay', color = 'none', thickness, headLength, wayPoints}) {
 		var size = thickness * 12;
 		var g = this.renderPart({type: 'g', attr: {stroke: color, 'stroke-width': thickness}});
 		var def = g.appendChild(this.renderPart({type: 'defs'}));
@@ -325,7 +331,7 @@ const SvgRenderer = (() => {
 			markerUnits: 'userSpaceOnUse',
 			markerWidth: size, markerHeight: size, refX: size * 0.8 + thickness, refY: size * 0.5, orient: 'auto'
 		}}));
-		var path = marker.appendChild(App.renderPart({type: 'path', attr: {
+		var path = marker.appendChild(this.renderPart({type: 'path', attr: {
 			fill: 'none',
 			//d: 'M25 40 L40 25 L25 10'
 			d: `M${0.5*size} ${0.8*size} L${0.8*size} ${0.5*size} L${0.5*size} ${0.2*size}`
@@ -342,7 +348,7 @@ const SvgRenderer = (() => {
 		}));
 		return g;
 	};
-	P.renderRect = ({target, center, width, height, borderSize = 0, backgroundColor = 'none', borderColor = 'none', rounded, opacity = 1}) => {
+	P.renderRect = function({target, center, width, height, borderSize = 0, backgroundColor = 'none', borderColor = 'none', rounded, opacity = 1}) {
 		borderSize = borderSize || borderColor !== 'none' ? 2 : 0;
 		return this.renderPart({
 			target, type: 'rect',
@@ -360,35 +366,35 @@ const SvgRenderer = (() => {
 			}
 		});
 	};
-	P.renderText = ({target, center, width, height, color = '#000', fontSize, text}) => {
-			P.renderPart({
-				target, type: 'rect',
-				attr: {
-					'fill': '#fff',
-					'stroke': 'none',
-					'x': (center[1] - width * 0.5) * 64 + 2,
-					'y': (center[0] - height * 0.5) * 64 + 2,
-					'width': width * 60 - 1,
-					'height': height * 60 - 1,
-				}
-			});
-			switch(fontSize) {
-				case 28: fontSize = 34; break;
-				case 30: fontSize = 34; break;
+	P.renderText = function({target, center, width, height, color = '#000', fontSize, text}) {
+		this.renderPart({
+			target, type: 'rect',
+			attr: {
+				'fill': '#fff',
+				'stroke': 'none',
+				'x': (center[1] - width * 0.5) * 64 + 2,
+				'y': (center[0] - height * 0.5) * 64 + 2,
+				'width': width * 60 - 1,
+				'height': height * 60 - 1,
 			}
-			P.renderPart({
-				target, type: 'text',
-				attr: {
-					x: (center[1] + 0.0 * width) * 64 + 2,
-					y: (center[0] + 0.1 * height) * 64 + 2,
-					'text-anchor': 'middle',
-					'dominant-baseline': 'middle',
-					//style: 'font-size: ' + (fontSize === 28 ? 34 : 24) + 'px;',
-					style: `font-size: ${fontSize}px;`,
-				},
-				content: text,
-			});
-		};
+		});
+		switch(fontSize) {
+			case 28: fontSize = 34; break;
+			case 30: fontSize = 34; break;
+		}
+		this.renderPart({
+			target, type: 'text',
+			attr: {
+				x: (center[1] + 0.0 * width) * 64 + 2,
+				y: (center[0] + 0.1 * height) * 64 + 2,
+				'text-anchor': 'middle',
+				'dominant-baseline': 'middle',
+				//style: 'font-size: ' + (fontSize === 28 ? 34 : 24) + 'px;',
+				style: `font-size: ${fontSize}px;`,
+			},
+			content: text,
+		});
+	};
 	return SvgRenderer;
 })();
 
@@ -459,7 +465,7 @@ const Puzzle = (() => {
 	// Board
 		P.clearPuzzle = function() {
 			this.clearHighlight();
-			this.grid.cells.forEach(row => row.forEach(cell => cell.clear(3)));
+			this.grid.cells.forEach(row => row.forEach(cell => cell.clear({levels: 3})));
 		};
 		P.createPuzzle = function({rows = this.rows, cols = this.cols}) {
 			//console.log('Puzzle.createPuzzle({rows: %s, col: %s});', rows, cols);
@@ -621,7 +627,7 @@ const Puzzle = (() => {
 					this.highlightedCells.length = 0;
 					this.highlightedCells.push.apply(this.highlightedCells, cells);
 					return true;
-				case 'clear': cells.forEach(cell => cell.clear()); return true;
+				case 'clear': cells.forEach(cell => cell.clear({mode: this.app.mode})); return true;
 				case 'value': cells.forEach(cell => cell.setValue(value)); return true;
 				case 'candidates': cells.forEach(cell => cell.toggleCandidates(value)); return true;
 				case 'pencilmarks': cells.forEach(cell => cell.togglePencilMark(value)); return true;
@@ -812,9 +818,7 @@ const App = (() => {
 	function App(opts = {}) {
 		this.grid = new Grid({parent: document.getElementById('board'), rows: 9, cols: 9});
 		this.svgRenderer = new SvgRenderer();
-
 		this.puzzle = new Puzzle({app: this});
-		
 		// Bind all handlers
 		Object.getOwnPropertyNames(Object.getPrototypeOf(this))
 			.filter(prop => /^handle/.test(prop) && typeof this[prop] === 'function')
@@ -854,103 +858,6 @@ const App = (() => {
 	App.DoubleInputTimeout = 500;
 	App.DoubleInputDistance = 10;
 	App.distance = (a, b) => { const dx = b.x - a.x, dy = b.y - a.y; return Math.round(Math.sqrt(dx * dx + dy * dy)); };
-	// SVG rendering
-		/*
-		App.svgId = 0;
-		App.renderPart = ({target = 'underlay', type, attr = {}, content}) => {
-			//console.info('App.renderPart({target, type, attr, content});', target, type, attr, content);
-			var svg = document.querySelector('svg#' + target), svgNS = svg.namespaceURI;
-			var part = document.createElementNS(svgNS, type);
-			Object.keys(attr).forEach(key => part.setAttribute(key, attr[key]));
-			if(content) part.textContent = content;
-			svg.appendChild(part);
-			return part;
-		};
-		App.renderLine = ({target = 'overlay', color = 'none', thickness, wayPoints}) => App.renderPart({
-			target, type: 'path',
-			attr: {
-				'fill': 'none',
-				'stroke': color,
-				'stroke-width': thickness,
-				'stroke-linecap': 'round',
-				'stroke-linejoin': 'round',
-				'd': wayPoints.map(([r, c], idx) => `${idx === 0 ? 'M' : 'L'}${64 * c} ${64 * r}`).join(' '),
-			}
-		});
-		App.renderArrow = ({target = 'overlay', color = 'none', thickness, headLength, wayPoints}) => {
-			var size = thickness * 12;
-			var g = App.renderPart({type: 'g', attr: {stroke: color, 'stroke-width': thickness}});
-			var def = g.appendChild(App.renderPart({type: 'defs'}));
-			var marker = def.appendChild(App.renderPart({type: 'marker', attr: {
-				id: 'arrow_' + (App.svgId++),
-				markerUnits: 'userSpaceOnUse',
-				markerWidth: size, markerHeight: size, refX: size * 0.8 + thickness, refY: size * 0.5, orient: 'auto'
-			}}));
-			var path = marker.appendChild(App.renderPart({type: 'path', attr: {
-				fill: 'none',
-				//d: 'M25 40 L40 25 L25 10'
-				d: `M${0.5*size} ${0.8*size} L${0.8*size} ${0.5*size} L${0.5*size} ${0.2*size}`
-			}}));
-			var arrow = g.appendChild(App.renderPart({
-				target, type: 'path',
-				attr: {
-					'fill': 'none',
-					'stroke-linecap': 'round',
-					'stroke-linejoin': 'round',
-					'marker-end': 'url(#'+marker.id+')',
-					'd': wayPoints.map(([r, c], idx) => `${idx === 0 ? 'M' : 'L'}${64 * c} ${64 * r}`).join(' '),
-				}
-			}));
-			return g;
-		};
-		App.renderRect = ({target, center, width, height, borderSize = 0, backgroundColor = 'none', borderColor = 'none', rounded, opacity = 1}) => {
-			borderSize = borderSize || borderColor !== 'none' ? 2 : 0;
-			return App.renderPart({
-				target, type: 'rect',
-				attr: {
-					'fill': backgroundColor,
-					'rx': rounded ? width * 64 : 0,
-					'ry': rounded ? height * 64 : 0,
-					'stroke': borderColor,
-					'stroke-width': borderSize,
-					'x': (center[1] - width * 0.5) * 64 + 0.5 * borderSize,
-					'y': (center[0] - height * 0.5) * 64 + 0.5 * borderSize,
-					'width': width * 64 - 1 * borderSize,
-					'height': height * 64 - 1 * borderSize,
-					opacity
-				}
-			});
-		};
-		App.renderText = ({target, center, width, height, color = '#000', fontSize, text}) => {
-			App.renderPart({
-				target, type: 'rect',
-				attr: {
-					'fill': '#fff',
-					'stroke': 'none',
-					'x': (center[1] - width * 0.5) * 64 + 2,
-					'y': (center[0] - height * 0.5) * 64 + 2,
-					'width': width * 60 - 1,
-					'height': height * 60 - 1,
-				}
-			});
-			switch(fontSize) {
-				case 28: fontSize = 34; break;
-				case 30: fontSize = 34; break;
-			}
-			App.renderPart({
-				target, type: 'text',
-				attr: {
-					x: (center[1] + 0.0 * width) * 64 + 2,
-					y: (center[0] + 0.1 * height) * 64 + 2,
-					'text-anchor': 'middle',
-					'dominant-baseline': 'middle',
-					//style: 'font-size: ' + (fontSize === 28 ? 34 : 24) + 'px;',
-					style: `font-size: ${fontSize}px;`,
-				},
-				content: text,
-			});
-		};
-		*/
 	// Puzzle
 		P.createPuzzle = function(opts) { return this.puzzle.createPuzzle(opts); };
 		P.clearPuzzle = function() { return this.puzzle.clearPuzzle(); };
@@ -980,18 +887,19 @@ const App = (() => {
 		};
 		P.convertPuzzle = function(puzzle) {
 			console.warn('App.convertPuzzle(puzzle);', puzzle);
+			var svgRenderer = this.svgRenderer;
 			var underlaySvg = document.querySelector('svg#underlay'),
 					overlaySvg = document.querySelector('svg#overlay');
 			var rows = puzzle.cells.length, cols = Math.max.apply(Math, puzzle.cells.map(row => row.length));
 			this.createPuzzle({rows, cols});
 			[...underlaySvg.children].forEach(child => (child.nodeName !== 'defs') ? child.remove() : null);
 			[...overlaySvg.children].forEach(child => (child.nodeName !== 'defs') ? child.remove() : null);
-			puzzle.lines.forEach(this.svgRenderer.renderLine);
-			puzzle.arrows.forEach(this.svgRenderer.renderArrow);
+			puzzle.lines.forEach(svgRenderer.renderLine.bind(svgRenderer));
+			puzzle.arrows.forEach(svgRenderer.renderArrow.bind(svgRenderer));
 			[].concat(puzzle.underlays, puzzle.overlays).forEach(part => {
 				var target = puzzle.underlays.indexOf(part) !== -1 ? 'underlay' : 'overlay';
 				if(typeof part.text === 'string' && part.text.length > 0) {
-					this.svgRenderer.renderText(Object.assign({}, part, {target}));
+					svgRenderer.renderText(Object.assign({}, part, {target}));
 				}
 				else { // rect
 					var borderColor = part.borderColor || 'none';
@@ -1005,7 +913,7 @@ const App = (() => {
 					//if(borderColor !== 'none') borderColor = App.colorHexToRGBA(borderColor, 0.5);
 					//if(backgroundColor !== 'none') backgroundColor = App.colorHexToRGBA(backgroundColor, 0.5);
 					//console.log('rect colours:', part, backgroundColor, borderColor, opacity);
-					this.svgRenderer.renderRect(Object.assign({}, part, {target, borderColor, backgroundColor, opacity}));
+					svgRenderer.renderRect(Object.assign({}, part, {target, borderColor, backgroundColor, opacity}));
 				}
 			});
 			var givens = [], cages = [];
@@ -1123,20 +1031,21 @@ const App = (() => {
 		};
 	// Event Handlers
 		P.attachHandlers = function() {
-			window.addEventListener('focus', event => console.warn('window.focus:', event), {useCapture: true});
+			window.addEventListener('focus', event => console.warn('window.on(focus)'), {useCapture: true});
 			
-			document.addEventListener('mousedown', this.handleInputdown, {passive: false});
-			document.addEventListener('touchstart', this.handleInputdown, {passive: false});
-			document.addEventListener('mouseup', this.handleInputup, {passive: false});
-			document.addEventListener('touchend', this.handleInputup, {passive: false});
-			document.addEventListener('touchmove', this.handleInputmove, {passive: false});
-			document.addEventListener('mousemove', this.handleInputmove, {passive: false});
+				//document.querySelector('.grid').addEventListener('
+			// input
+				document.addEventListener('mousedown', this.handleInputdown, {passive: false});
+				document.addEventListener('touchstart', this.handleInputdown, {passive: false});
+				document.addEventListener('mouseup', this.handleInputup, {passive: false});
+				document.addEventListener('touchend', this.handleInputup, {passive: false});
+				document.addEventListener('touchmove', this.handleInputmove, {passive: false});
+				document.addEventListener('mousemove', this.handleInputmove, {passive: false});
 			// Keys
 				document.addEventListener('keydown', this.handleKeydown, {useCapture: true});
 				document.addEventListener('keyup', this.handleKeyup, {useCapture: true});
 			// Outside
-				document.addEventListener('blur', this.handleCancel);
-				document.addEventListener('focusout', this.handleCancel);
+				window.addEventListener('blur', this.handleCancel);
 				document.addEventListener('touchcancel', this.handleCancel);
 			// Buttons
 				document.querySelectorAll('button')
@@ -1252,11 +1161,21 @@ const App = (() => {
 				}
 			}
 		};
+		P.doPressDigit = function(digit) {
+			//console.log('App.doPressDigit(%s); mode: %s', digit, this.mode);
+			if(this.mode === 'colour' && digit === '1') {
+				//console.log('Pressed colour 1!');
+				this.act({type: 'clear'});
+			}
+			else {
+				this.act({type: App.ModeToAction[this.mode], value: digit});
+			}
+		};
 		P.handleKeydown = function(event) {
 			//console.info('App.handleKeydown:', event.type, event, event.target);
 			if(event.repeat) return;
 			if(App.reDigit.test(event.code)) {
-				this.act({type: App.ModeToAction[this.mode], value: event.code.replace(App.reDigit, '$1')});
+				this.doPressDigit(event.code.replace(App.reDigit, '$1'));
 				if(event.ctrlKey) event.preventDefault();
 			}
 			else if((event.key === 'Control' && event.shiftKey) || (event.key === 'Shift' && event.ctrlKey)) {
@@ -1326,7 +1245,7 @@ const App = (() => {
 			event.stopPropagation();
 			var control = event.target.dataset['control'];
 			if(control.match(/[0-9]/)) {
-				this.act({type: App.ModeToAction[this.mode], value: parseInt(control)});
+				this.doPressDigit(control);
 			}
 			else if(control.match(/^(normal|corner|centre|colour)$/)) {
 				this.changeMode(control);
@@ -1357,24 +1276,6 @@ const App = (() => {
 				case 'replayplay': this.replayPlay(JSON.parse(this.savedReplay)); break;
 				case 'replayff': this.replayPlay(JSON.parse(this.savedReplay), {maxDelay: 0, speed: -1}); break;
 				case 'replaystop': this.replayStop(); break;
-				case 'create':
-						var generated = sudoku.generate('hard');
-						console.log(generated);
-						var puzzle = {
-							givens: generated
-								.split('')
-								.map((n, i) => (n !== '.') ? `r${i % 9 + 1}c${Math.floor(i / 9) + 1}: ${n}` : undefined)
-								.filter(given => given !== undefined),
-							cages: [
-								{cells: 'r1c1-r3c3', style: 'box', sum: 45}, {cells: 'r1c4-r3c6', style: 'box', sum: 45}, {cells: 'r1c7-r3c9', style: 'box', sum: 45},
-								{cells: 'r4c1-r6c3', style: 'box', sum: 45}, {cells: 'r4c4-r6c6', style: 'box', sum: 45}, {cells: 'r4c7-r6c9', style: 'box', sum: 45},
-								{cells: 'r7c1-r9c3', style: 'box', sum: 45}, {cells: 'r7c4-r9c6', style: 'box', sum: 45}, {cells: 'r7c7-r9c9', style: 'box', sum: 45},
-							]
-						};
-						console.log(puzzle);
-						this.createPuzzle({rows: 9, cols: 9});
-						this.loadPuzzle(puzzle);
-					break;
 				case 'testdot': this.testDotPuzzle(); break;
 			}
 			//console.log(event.target.dataset['data-control']
@@ -1433,11 +1334,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		
 	// Plain Sudoku: 73FN293dR8
 	// Killer: hHRgM7R8h7
-	
-	var puzzleId = new URLSearchParams(document.location.search).get('puzzleid');
-	if(typeof puzzleId !== 'string') puzzleId = (document.location.pathname.match(/^\/sudoku\/([^/]+)$/) || [])[1];
-	if(typeof puzzleId === 'string') app.loadRemoteCTCPuzzle(puzzleId);
-		
+			
 	var testPuzzles = {
 		'PdRDmtPdqg': {
 			ctcId: 'PdRDmtPdqg',
@@ -1557,6 +1454,23 @@ document.addEventListener('DOMContentLoaded', () => {
 	};
 	app.testPuzzles = testPuzzles;
 	
+	var puzzleId;
+	
+	puzzleId = 'TmMBJj8jbr';
+	console.log('puzzleId:', puzzleId);
+	
+	var urlQueryPuzzleId = new URLSearchParams(document.location.search).get('puzzleid');
+	console.log('urlQueryPuzzleId:', urlQueryPuzzleId);
+	if(typeof urlQueryPuzzleId === 'string') puzzleId = urlQueryPuzzleId;
+	
+	var urlPathPuzzleId = (document.location.pathname.match(/^\/sudoku\/([^/]+)$/) || [])[1];
+	console.log('urlPathPuzzleId:', urlPathPuzzleId);
+	if(typeof urlPathPuzzleId === 'string') puzzleId = urlPathPuzzleId;
+	
+	console.log('puzzleId:', puzzleId);
+	if(typeof puzzleId === 'string') {
+		app.loadRemoteCTCPuzzle(puzzleId);
+	}
 	/*
 	var puzzle = testPuzzles['fRftpGmpdT'];
 	console.log('puzzle:', puzzle);
@@ -1604,312 +1518,3 @@ document.addEventListener('DOMContentLoaded', () => {
 	Diagonals: rNLJPPB9d3
 	*/
 });
-
-
-
-
-sudoku = (() => {
-	var sudoku = {};
-	sudoku.init = function() {
-		if(sudoku.initialised === true) return;
-		sudoku.initialised = true;
-		sudoku.DIGITS = '123456789';
-		sudoku.ROWS = 'ABCDEFGHI';
-		sudoku.COLS = sudoku.DIGITS;
-		sudoku.SQUARES = null;
-		sudoku.UNITS = null;
-		sudoku.SQUARE_UNITS_MAP = null;
-		sudoku.SQUARE_PEERS_MAP = null;
-		sudoku.MIN_GIVENS = 17;
-		sudoku.NR_SQUARES = 81;
-		sudoku.DIFFICULTY = {
-			"easy": 62,
-			"medium":53,
-			"hard":44,
-			"very-hard": 35,
-			"insane": 26,
-			"inhuman": 17,
-		};
-		sudoku.BLANK_CHAR = '.';
-		sudoku.SQUARES             = sudoku._cross(sudoku.ROWS, sudoku.COLS);
-		sudoku.UNITS               = sudoku._get_all_units(sudoku.ROWS, sudoku.COLS);
-		sudoku.SQUARE_UNITS_MAP    = sudoku._get_square_units_map(sudoku.SQUARES, sudoku.UNITS);
-		sudoku.SQUARE_PEERS_MAP    = sudoku._get_square_peers_map(sudoku.SQUARES, sudoku.SQUARE_UNITS_MAP);
-	};
-	sudoku.generate = function(difficulty, unique){
-		/* Generate a new Sudoku puzzle of a particular `difficulty`, e.g.,
-		`difficulty` must be a number between 17 and 81 inclusive. If it's
-		outside of that range, `difficulty` will be set to the closest bound,
-		e.g., 0 -> 17, and 100 -> 81.	
-		By default, the puzzles are unique, uless you set `unique` to false. 
-		(Note: Puzzle uniqueness is not yet implemented, so puzzles are *not* 
-		guaranteed to have unique solutions)
-		TODO: Implement puzzle uniqueness
-		*/
-		// If `difficulty` is a string or undefined, convert it to a number or
-		// default it to "easy" if undefined.
-		sudoku.init();
-		if(typeof difficulty === "string" || typeof difficulty === 'undefined') {
-			difficulty = sudoku.DIFFICULTY[difficulty] || sudoku.DIFFICULTY.easy;
-		}
-		// Force difficulty between 17 and 81 inclusive
-		difficulty = sudoku._force_range(difficulty, sudoku.NR_SQUARES + 1, sudoku.MIN_GIVENS);
-		// Default unique to true
-		unique = unique || true;
-		// Get a set of squares and all possible candidates for each square
-		var blank_board = "";
-		for(var i = 0; i < sudoku.NR_SQUARES; ++i) blank_board += '.';
-		var candidates = sudoku._get_candidates_map(blank_board);
-		// For each item in a shuffled list of squares
-		var shuffled_squares = sudoku._shuffle(sudoku.SQUARES);
-		for(var si in shuffled_squares) {
-			var square = shuffled_squares[si];
-			// If an assignment of a random chioce causes a contradictoin, give
-			// up and try again
-			var rand_candidate_idx = sudoku._rand_range(candidates[square].length);
-			var rand_candidate = candidates[square][rand_candidate_idx];
-			if(!sudoku._assign(candidates, square, rand_candidate)) break;
-			var single_candidates = [];
-			for(var si in sudoku.SQUARES) {
-				var square = sudoku.SQUARES[si];
-				if(candidates[square].length == 1) single_candidates.push(candidates[square]);
-			}
-			// If we have at least difficulty, and the unique candidate count is
-			// at least 8, return the puzzle!
-			if(single_candidates.length >= difficulty && sudoku._strip_dups(single_candidates).length >= 8){
-				var board = '';
-				var givens_idxs = [];
-				for(var i in sudoku.SQUARES){
-					var square = sudoku.SQUARES[i];
-					if(candidates[square].length == 1){
-						board += candidates[square];
-						givens_idxs.push(i);
-					}
-					else {
-						board += sudoku.BLANK_CHAR;
-					}
-				}
-				// If we have more than `difficulty` givens, remove some random
-				// givens until we're down to exactly `difficulty`
-				var nr_givens = givens_idxs.length;
-				if(nr_givens > difficulty){
-					givens_idxs = sudoku._shuffle(givens_idxs);
-					for(var i = 0; i < nr_givens - difficulty; ++i){
-						var target = parseInt(givens_idxs[i]);
-						board = board.substr(0, target) + sudoku.BLANK_CHAR + board.substr(target + 1);
-					}
-				}
-				// Double check board is solvable
-				// TODO: Make a standalone board checker. Solve is expensive.
-				if(sudoku.solve(board)) return board;
-			}
-		}
-		return sudoku.generate(difficulty);
-	};
-	sudoku.solve = function(board, reverse) {
-		sudoku.init();
-		var report = sudoku.validate_board(board);
-		if(report !== true) throw report;
-		var nr_givens = 0;
-		for(var i in board) {
-			if(board[i] !== sudoku.BLANK_CHAR && sudoku.DIGITS.includes(board[i])) ++nr_givens;
-		}
-		if(nr_givens < sudoku.MIN_GIVENS) throw 'Too few givens. Minimum givens is' + sudoku.MIN_GIVENS;
-		reverse = reverse || false;
-		var candidates = sudoku._get_candidates_map(board);
-		var result = sudoku._search(candidates, reverse);
-		if(result) {
-			var solution = '';
-			for(var square in result) solution += result[square];
-			return solution;
-		}
-		return false;
-	};
-	sudoku._get_candidates_map = function(board){
-		var report = sudoku.validate_board(board);
-		if(report !== true) throw report;
-		var candidate_map = {};
-		var squares_values_map = sudoku._get_square_vals_map(board);
-		for(var si in sudoku.SQUARES) candidate_map[sudoku.SQUARES[si]] = sudoku.DIGITS;
-		for(var square in squares_values_map){
-			var val = squares_values_map[square];
-			if(sudoku.DIGITS.includes(val)) {
-				var new_candidates = sudoku._assign(candidate_map, square, val);
-				if(!new_candidates) return false;
-			}
-		}
-		return candidate_map;
-	};
-	sudoku._search = function(candidates, reverse){
-		if(!candidates) return false;
-		reverse = reverse || false;
-		var max_nr_candidates = 0;
-		var max_candidates_square = null;
-		for(var si in sudoku.SQUARES) {
-			var square = sudoku.SQUARES[si];
-			var nr_candidates = candidates[square].length;
-			if(nr_candidates > max_nr_candidates) {
-				max_nr_candidates = nr_candidates;
-				max_candidates_square = square;
-			}
-		}
-		if(max_nr_candidates === 1) return candidates;
-		var min_nr_candidates = 10;
-		var min_candidates_square = null;
-		for(si in sudoku.SQUARES) {
-			var square = sudoku.SQUARES[si];
-			var nr_candidates = candidates[square].length;
-			if(nr_candidates < min_nr_candidates && nr_candidates > 1){
-				min_nr_candidates = nr_candidates;
-				min_candidates_square = square;
-			}
-		}
-		var min_candidates = candidates[min_candidates_square];
-		if(!reverse) {
-			//for(var vi in min_candidates) {
-			for(var vi = 0; vi < min_candidates.length; vi++) {
-				var val = min_candidates[vi];
-				var candidates_copy = Object.assign({}, candidates);
-				var candidates_next = sudoku._search(sudoku._assign(candidates_copy, min_candidates_square, val));
-				if(candidates_next) return candidates_next;
-			}
-		}
-		else {
-			for(var vi = min_candidates.length - 1; vi >= 0; --vi) {
-				var val = min_candidates[vi];
-				var candidates_copy = Object.assign({}, candidates);
-				var candidates_next = sudoku._search(sudoku._assign(candidates_copy, min_candidates_square, val), reverse);
-				if(candidates_next) return candidates_next;
-			}
-		}
-		return false;
-	};
-	sudoku._assign = function(candidates, square, val){
-		var other_vals = candidates[square].replace(val, '');
-		for(var ovi in other_vals) {
-			var other_val = other_vals[ovi];
-			var candidates_next = sudoku._eliminate(candidates, square, other_val);
-			if(!candidates_next) return false;
-		}
-		return candidates;
-	};
-	sudoku._eliminate = function(candidates, square, val){
-		if(!candidates[square].includes(val)) return candidates;
-		candidates[square] = candidates[square].replace(val, '');
-		var nr_candidates = candidates[square].length;
-		if(nr_candidates === 1){
-			var target_val = candidates[square];
-			for(var pi in sudoku.SQUARE_PEERS_MAP[square]){
-				var peer = sudoku.SQUARE_PEERS_MAP[square][pi];
-				var candidates_new = sudoku._eliminate(candidates, peer, target_val);
-				if(!candidates_new) return false;
-			}
-		}
-		if(nr_candidates === 0) return false;
-		for(var ui in sudoku.SQUARE_UNITS_MAP[square]) {
-			var unit = sudoku.SQUARE_UNITS_MAP[square][ui];
-			var val_places = [];
-			for(var si in unit){
-				var unit_square = unit[si];
-				if(candidates[unit_square].includes(val)) val_places.push(unit_square);
-			}
-			if(val_places.length === 0) return false;
-			if(val_places.length === 1) {
-				var candidates_new = sudoku._assign(candidates, val_places[0], val);
-				if(!candidates_new) return false;
-			}
-		}
-		return candidates;
-	};
-	sudoku._get_square_vals_map = function(board) {
-		var squares_vals_map = {};
-		if(board.length != sudoku.SQUARES.length) throw new Error("Board/squares length mismatch.");
-		for(var i in sudoku.SQUARES) squares_vals_map[sudoku.SQUARES[i]] = board[i];
-		return squares_vals_map;
-	};
-	sudoku._get_square_units_map = function(squares, units){
-		var square_unit_map = {};
-		for(var si in squares){
-			var cur_square = squares[si];
-			var cur_square_units = [];
-			for(var ui in units){
-				var cur_unit = units[ui];
-				if(cur_unit.indexOf(cur_square) !== -1) cur_square_units.push(cur_unit);
-			}
-			square_unit_map[cur_square] = cur_square_units;
-		}
-		return square_unit_map;
-	};
-	sudoku._get_square_peers_map = function(squares, units_map){
-		var square_peers_map = {};
-		for(var si in squares) {
-			var cur_square = squares[si];
-			var cur_square_units = units_map[cur_square];
-			var cur_square_peers = [];
-			for(var sui in cur_square_units){
-				var cur_unit = cur_square_units[sui];
-				for(var ui in cur_unit){
-					var cur_unit_square = cur_unit[ui];
-					if(cur_square_peers.indexOf(cur_unit_square) === -1 && cur_unit_square !== cur_square) {
-						cur_square_peers.push(cur_unit_square);
-					}
-				}
-			}
-			square_peers_map[cur_square] = cur_square_peers;
-		}
-		return square_peers_map;
-	};
-	sudoku._get_all_units = function(rows, cols){
-		/* Return a list of all units (rows, cols, boxes)
-		*/
-		var units = [];
-		// sudoku.ROWS
-		for(var ri in rows){
-			units.push(sudoku._cross(rows[ri], cols));
-		}
-		// Columns
-		for(var ci in cols){
-			 units.push(sudoku._cross(rows, cols[ci]));
-		}
-		// Boxes
-		var row_squares = ["ABC", "DEF", "GHI"];
-		var col_squares = ["123", "456", "789"];
-		for(var rsi in row_squares){
-			for(var csi in col_squares){
-				units.push(sudoku._cross(row_squares[rsi], col_squares[csi]));
-			}
-		}
-		return units;
-	};
-	sudoku.validate_board = function(board){
-		if(!board) return "Empty board";	
-		if(board.length !== sudoku.NR_SQUARES) return "Invalid board size. Board must be exactly " + sudoku.NR_SQUARES + " squares.";
-		for(var i in board) {
-			if(!sudoku.DIGITS.includes(board[i]) && board[i] !== sudoku.BLANK_CHAR){
-				return "Invalid board character encountered at index " + i + ": " + board[i];
-			}
-		}
-		return true;
-	};
-	sudoku._cross = function(a, b) {
-		var result = [];
-		for(var ai in a)
-			for(var bi in b)
-				result.push(a[ai] + b[bi]);
-		return result;
-	};
-	sudoku._shuffle = function(seq){
-		var shuffled = [];
-		for(var i = 0; i < seq.length; ++i) shuffled.push(false);
-		for(var i in seq) {
-			var ti = sudoku._rand_range(seq.length);
-			while(shuffled[ti]) ti = (ti + 1) > (seq.length - 1) ? 0 : (ti + 1);
-			shuffled[ti] = seq[i];
-		}	
-		return shuffled;
-	};
-	sudoku._rand_range = (max = 0, min = 0) => Math.floor(Math.random() * (max - min)) + min;
-	sudoku._strip_dups = (seq = []) => [...new Set(seq)];
-	sudoku._force_range = (nr, max = 0, min = 0) => Math.min(max || 0, Math.max(min || 0, nr));
-	return sudoku;
-})();
