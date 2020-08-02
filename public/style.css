@@ -52,6 +52,7 @@ html, body {
 	position: relative;
 	display: flex;
 	margin-top: 64px;
+	display: none;
 }
 .board svg#timeline {
 	position: relative;
