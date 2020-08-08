@@ -1,80 +1,167 @@
 <!DOCTYPE html>
 <html lang="en" >
-<head>
-  <meta charset="UTF-8">
-  <title>CodePen - CTC App 0.10.2</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/style.css">
+	<head>
+		<meta charset="UTF-8"/>
+		<title>CTC App Alpha Testing - Cracking The Cryptic</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1"/>
+		<link rel="stylesheet" href="/style.css"/>
+		<style>
+			html, body {
+				overflow: visible;
+			}
+			body {
+				background: url(/images/1500x500.jpg) no-repeat;
+				background-position: center -120px;
+			}
+			.content {
+				max-width: 80em;
+				padding-top: 250px;
+				margin: 0 auto;
+			}
+			.introduction { margin-bottom: 4em; }
+			.puzzle {
+				margin: 2em 0;
+			}
+			.puzzle::after {
+				content: "";
+				display: block; 
+				clear: both;
+			}
+			.puzzle-video {
+				float: right;
+				margin: 1em;
+			}
+			.videohost { font-weight: 600; }
+		</style>
+	</head>
+	<body>
+		<div class="content">
+			<h1>Cracking The Cryptic Web App Alpha Test</h1>
+			<div class="introduction">
+				<h2>Introduction</h2>
+				<p>Hi,</p>
+				<p>I'm Sven (killroy on Discord), and I am working on a new version of the Cracking The Cryptic web app. Our aim is to replace the current app with an equivalent tool in the next month or so, which will prepare us for adding all those features we've been planning.</p>
+				<p>As a valued contributor to the CTC community, and experienced puzzler, I would appreciate your help in testing the new app to ensure it will work as well as possible.</p>
+				<p>The plan is to spend around 2 weeks on testing amongst us, to find the most pressing issues, before handing it over to Simon and Mark to ensure the tool works for the video production workflow.</p>
+				<p>The testing will proceed in two phases of around 1-3 weeks each:</p>
+				<h3>Phase 1</h3>
+				<ol>
+					<li>Test core functionality and find the worst and most obvious issues</li>
+					<li>Test support for a wide variety of existing puzzles</li>
+					<li>Test mouse and keyboard controls</li>
+					<li>Test for any performance issues</li>
+					<li>Fine-tune usability and UX behaviours</li>
+					<li>Ignore currently known visual issues (such as ordering of overlays, etc)</li>
+					<li>Ignore scaling issues on mobile platforms</li>
+					<li>Ignore any issues that are also present in the legacy app</li>
+				</ol>
+				<h3>Phase 2</h3>
+				<ol>
+					<li>Fine-tune visual details</li>
+					<li>Test layout and resizing on various displays and mobile platforms</li>
+					<li>Test extreme test puzzles for edge cases</li>
+					<li>Test several new features, such as dark mode and an improved checker function</li>
+					<li>Collect suggestions for improvements, worthwhile changes and updates, and requests for completely new features</li>
+				</ol>
+				<p>Currently I am cleaning up some remaining issues (clearing cells, some selection issues, etc), and I will create a selection of test puzzles for phase one, as well as some UI elements to navigate these.</p>
+				<p>If you are interested in helping out, just post in the test channel #webapp-testing on discord, or, if you do not have access, let me or one of the mods know.</p>
+				<p>I truly appreciate your help, and hope the new app will be a welcome improvement.</p>
+				<p>Kind Regards,</p>
+				<p>Sven</p>
+			</div>
 
-</head>
-<body>
-<!-- partial:index.partial.html -->
-<div class="app">
-	<div class="game">
-		<div id="board" class="board">
-			<div class="grid">
-				<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="underlay" draggable="false"/>
-				<div class="cells"></div>
-				<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="overlay" draggable="false"/>
-			</div>
-			<div class="timeline">
-				<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="timeline" draggable="false">
-					<path d="M32 32 L544 32" stroke-width="8" stroke="lightgray" stroke-linecap="round" stroke-linejoin="round"/>
-					<path d="M32 32 L300 32" stroke-width="8" stroke="gray" stroke-linecap="round" stroke-linejoin="round"/>
-					<path d="M300 32 L300 32" stroke-width="24" stroke="gray" stroke-linecap="round" stroke-linejoin="round"/>
-				</svg>
-			</div>
-		</div>
-		<div id="controls" class="controls">
-			<div class="controls-main mode-normal">
-				<div class="controls-mode">
-					<button data-control="normal">Normal</button>
-					<button data-control="corner">Corner</button>
-					<button data-control="centre">Centre</button>
-					<button data-control="colour">Colour</button>
-					<button data-control="pen">Pen</button>
+			<div class="testpuzzles">
+				<h2>Test Puzzles</h2>
+				<div class="puzzle">
+					<div class="puzzle-video">
+						<iframe width="560" height="315" src="https://www.youtube.com/embed/M3oVi4cBRxE" frameborder="0" allowfullscreen></iframe>
+					</div>
+					<h3><span class="puzzle-title">Araf Sudoku</span> by <span class="puzzle-setter">Phistomefel</span></h3>
+					<div class="puzzle-videohost">
+						Hosted by <span class="videohost">Simon</span>
+					</div>
+					<div class="puzzle-applink">
+						<div>Play <a href="https://app.crackingthecryptic.com/sudoku/hDNMJqPmTh" target="_blank">Araf Sudoku</a></div>
+						<div>View <a href="https://www.youtube.com/watch?v=M3oVi4cBRxE" target="_blank">YouTube Video</a></div>
+					</div>
+					<h4>Rules</h4>
+					<p>Normal sudoku rules apply. The grid must be decomposed into different areas. Each cell belongs to exactly one area. Each area contains exactly two clues. The sum of all digits in an area lies between the two clues, but may not reach them. For example, if the clues for an area are 21 and 24, the sum of the digits in the area is 22 or 23. Digits may not repeat within an area.</p>
 				</div>
-				<div class="controls-input">
-					<button data-control="1" class="digit">1</button>
-					<button data-control="2" class="digit">2</button>
-					<button data-control="3" class="digit">3</button>
-					<button data-control="4" class="digit">4</button>
-					<button data-control="5" class="digit">5</button>
-					<button data-control="6" class="digit">6</button>
-					<button data-control="7" class="digit">7</button>
-					<button data-control="8" class="digit">8</button>
-					<button data-control="9" class="digit">9</button>
-					<button data-control="0" class="digit">0</button>
-					<button data-control="delete">Delete</button>
+
+				<div class="puzzle">
+					<div class="puzzle-video">
+						<iframe width="560" height="315" src="https://www.youtube.com/embed/dDdd8iBQMQk" frameborder="0" allowfullscreen></iframe>
+					</div>
+					<h3><span class="puzzle-title">16 Cups Of Tea</span> by <span class="puzzle-setter">Sumanta Mukherjee</span></h3>
+					<div class="puzzle-videohost">
+						Hosted by <span class="videohost">Simon</span>
+					</div>
+					<div class="puzzle-applink">
+						<div>Play <a href="https://app.crackingthecryptic.com/sudoku/BLLGjtrb4P" target="_blank">16 Cups Of Tea</a></div>
+						<div>View <a href="https://www.youtube.com/watch?v=dDdd8iBQMQk" target="_blank">YouTube Video</a></div>
+					</div>
+					<h4>Rules</h4>
+					<p>Normal sudoku rules apply.  In cages, digits must sum to the small clue given in the top left corner of the cage.  Digits cannot repeat in a cage.  Clues outside the grid give the sum of cells along the indicated diagonal.  Inequality signs in the grid point to the lower of the two cells involved.</p>
+				</div>
+
+				<div class="puzzle">
+					<div class="puzzle-video">
+						<iframe width="560" height="315" src="https://www.youtube.com/embed/qRMqYWqUnPc" frameborder="0" allowfullscreen></iframe>
+					</div>
+					<h3><span class="puzzle-title">Battlefield Sudoku</span> by <span class="puzzle-setter">Big Tiger</span></h3>
+					<div class="puzzle-videohost">
+						Hosted by <span class="videohost">Simon</span>
+					</div>
+					<div class="puzzle-applink">
+						<div>Play <a href="https://app.crackingthecryptic.com/sudoku/qr6dDQJRpf" target="_blank">Battlefield Sudoku</a></div>
+						<div>View <a href="https://www.youtube.com/watch?v=qRMqYWqUnPc" target="_blank">YouTube Video</a></div>
+					</div>
+					<h4>Rules</h4>
+					<p>Normal sudoku rules apply. Consider the first X cells and the last Y cells of a row or column where X is the number in the first cell and Y is the number in the last cell. A clue outside the grid gives the sum of the digits where these groups overlap, or the sum of the digits in the gap between the groups if they don't overlap.</p>
+				</div>
+
+				<div class="puzzle">
+					<div class="puzzle-video">
+						<iframe width="560" height="315" src="https://www.youtube.com/embed/0JMmSxhyfIo" frameborder="0" allowfullscreen></iframe>
+					</div>
+					<h3><span class="puzzle-title">C.T.C.</span> by <span class="puzzle-setter">Prasanna Seshadri</span></h3>
+					<div class="puzzle-videohost">
+						Hosted by <span class="videohost">Simon</span>
+					</div>
+					<div class="puzzle-applink">
+						<div>Play <a href="https://app.crackingthecryptic.com/sudoku/TmMBJj8jbr" target="_blank">C.T.C.</a></div>
+						<div>View <a href="https://www.youtube.com/watch?v=0JMmSxhyfIo" target="_blank">YouTube Video</a></div>
+					</div>
+					<h4>Rules</h4>
+					<p>Normal killer sudoku rules apply (cells in cages must sum to the total given in the top left of each cage). Cage totals have been coded Each letter represents a unique digit. Even numbers within the cages are shaded.</p>
+				</div>
+
+				<div class="puzzle">
+					<div class="puzzle-video">
+						<iframe width="560" height="315" src="https://www.youtube.com/embed/jayJVjqAS3k" frameborder="0" allowfullscreen></iframe>
+					</div>
+					<h3><span class="puzzle-title">Partial Coded Killer</span> by <span class="puzzle-setter">Scott Strosahl</span></h3>
+					<div class="puzzle-videohost">
+						Hosted by <span class="videohost">Simon</span>
+					</div>
+					<div class="puzzle-applink">
+						<div>Play <a href="https://app.crackingthecryptic.com/sudoku/j2gtNR4Mg4" target="_blank">Partial Coded Killer</a></div>
+						<div>View <a href="https://www.youtube.com/watch?v=jayJVjqAS3k" target="_blank">YouTube Video</a></div>
+					</div>
+					<h4>Rules</h4>
+					<p>Normal sudoku rules apply. Consider the first X cells and the last Y cells of a row or column where X is the number in the first cell and Y is the number in the last cell. A clue outside the grid gives the sum of the digits where these groups overlap, or the sum of the digits in the gap between the groups if they don\'t overlap.</p>
 				</div>
 			</div>
-			<div class="controls-aux">
-				<button data-control="undo">Undo</button>
-				<button data-control="redo">Redo</button>
-				<button data-control="restart">Restart</button>
-				<button data-control="check">Check</button>
-				<!--
-				<input data-control="puzzleid" type="text"/>
-				<button data-control="import">Import</button>
-				<button data-control="savereplay">Save RP</button>
-				<button data-control="replayplay">Replay ▶</button>
-				<button data-control="replayff">Replay ▶▶</button>
-				<button data-control="replaystop">Replay ■</button>
-				<button data-control="testdot">Test Dot</button>
-				-->
-			</div>
+
 		</div>
-	</div>
-</div>
 
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-173937060-1"></script>
-<script>
-	window.dataLayer = window.dataLayer || [];
-	function gtag(){dataLayer.push(arguments);}
-	gtag('js', new Date());
-	gtag('config', 'UA-173937060-1');
-</script>
-<!-- partial -->
-  <script  src="/script.js"></script>
 
-</body>
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-173937060-1"></script>
+		<script>
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			gtag('js', new Date());
+			gtag('config', 'UA-173937060-1');
+		</script>
+	</body>
 </html>

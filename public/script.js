@@ -1690,7 +1690,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 	//puzzleId = 'TmMBJj8jbr';
 	//puzzleId = 'npM6B443HL';
-	puzzleId = 'qr6dDQJRpf';
+	//puzzleId = 'qr6dDQJRpf';
 	console.log('puzzleId:', puzzleId);
 	
 	var urlQueryPuzzleId = new URLSearchParams(document.location.search).get('puzzleid');

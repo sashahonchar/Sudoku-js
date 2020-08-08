@@ -11,7 +11,11 @@
     ],
     "rewrites": [
       {
-        "source": "/**",
+        "source": "/sudoku/**",
+        "destination": "/sudoku.html"
+      },
+      {
+        "source": "/",
         "destination": "/index.html"
       }
     ],

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>CTC App 0.10.2</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/style.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<div class="app">
+	<div class="game">
+		<div id="board" class="board">
+			<div class="grid">
+				<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="underlay" draggable="false"/>
+				<div class="cells"></div>
+				<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="overlay" draggable="false"/>
+			</div>
+			<div class="timeline">
+				<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="timeline" draggable="false">
+					<path d="M32 32 L544 32" stroke-width="8" stroke="lightgray" stroke-linecap="round" stroke-linejoin="round"/>
+					<path d="M32 32 L300 32" stroke-width="8" stroke="gray" stroke-linecap="round" stroke-linejoin="round"/>
+					<path d="M300 32 L300 32" stroke-width="24" stroke="gray" stroke-linecap="round" stroke-linejoin="round"/>
+				</svg>
+			</div>
+		</div>
+		<div id="controls" class="controls">
+			<div class="controls-main mode-normal">
+				<div class="controls-mode">
+					<button data-control="normal">Normal</button>
+					<button data-control="corner">Corner</button>
+					<button data-control="centre">Centre</button>
+					<button data-control="colour">Colour</button>
+					<button data-control="pen">Pen</button>
+				</div>
+				<div class="controls-input">
+					<button data-control="1" class="digit">1</button>
+					<button data-control="2" class="digit">2</button>
+					<button data-control="3" class="digit">3</button>
+					<button data-control="4" class="digit">4</button>
+					<button data-control="5" class="digit">5</button>
+					<button data-control="6" class="digit">6</button>
+					<button data-control="7" class="digit">7</button>
+					<button data-control="8" class="digit">8</button>
+					<button data-control="9" class="digit">9</button>
+					<button data-control="0" class="digit">0</button>
+					<button data-control="delete">Delete</button>
+				</div>
+			</div>
+			<div class="controls-aux">
+				<button data-control="undo">Undo</button>
+				<button data-control="redo">Redo</button>
+				<button data-control="restart">Restart</button>
+				<button data-control="check">Check</button>
+				<!--
+				<input data-control="puzzleid" type="text"/>
+				<button data-control="import">Import</button>
+				<button data-control="savereplay">Save RP</button>
+				<button data-control="replayplay">Replay ▶</button>
+				<button data-control="replayff">Replay ▶▶</button>
+				<button data-control="replaystop">Replay ■</button>
+				<button data-control="testdot">Test Dot</button>
+				-->
+			</div>
+		</div>
+	</div>
+</div>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-173937060-1"></script>
+<script>
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'UA-173937060-1');
+</script>
+<!-- partial -->
+  <script  src="/script.js"></script>
+
+</body>
+</html>
