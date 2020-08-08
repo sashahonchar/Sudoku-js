@@ -401,10 +401,14 @@ const SvgRenderer = (() => {
 const Replay = (() => {
 	function Replay() {}
 	const P = Object.assign(Replay.prototype, {constructor: Replay});
-	const reActA = Replay.reActA = /(hl|vl|pm|cd|co|cl|ud|rd)(?:\:([^/]+))?(?:\/([0-9]+))?/ig;
-	const reActB = Replay.reActB = /(HL|VL|PM|CD|CO|CL|UD|RD)(?:([^T]+))?(?:T([0-9]+))?/g;
+	const tSepA = '/', tSepB = 'T', tSepC = '_';
+	const reActA = Replay.reActA = new RegExp('(hl|sl|ds|vl|pm|cd|co|cl|ud|rd)(?:\:([^'+tSepA+',]+))?(?:'+tSepA+'([0-9]+))?', 'ig');
+	const reActB = Replay.reActB = new RegExp('(HL|SL|DS|VL|PM|CD|CO|CL|UD|RD)(?:([^'+tSepB+']+))?(?:'+tSepB+'([0-9]+))?', 'g');
+	const reActC = Replay.reActC = new RegExp('([A-Z])(?:([^'+tSepC+']+))?(?:'+tSepC+'([0-9]+))?', 'g');	
 	const reRCVal = Replay.reRCVal = /r([0-9]+)c([0-9]+)(?:\s*[:=]\s*([a-zA-Z0-9]+))?/g;
 	const reNum = Replay.reNum = /[0-9a-f]{2}/g;
+	const reCellArg = Replay.reCellArg = /^(hl|sl|ds)$/i;
+	const actA = 'hl,vl,pm,cd,co,cl,ud,rd,sl,ds'.split(',');
 	const rcToNum = Replay.rcToNum = w => rcv => {
 		reRCVal.lastIndex = 0;
 		const [_, r, c, v] = [...(reRCVal.exec(rcv) || [])];
@@ -422,14 +426,14 @@ const Replay = (() => {
 			return act => {
 			try {
 				reActA.lastIndex = 0;
-				var [_, res, arg, dt] = reActA.exec(act);
+				var [_, type, arg, dt] = reActA.exec(act);
 				reActA.lastIndex = 0;
-				res = res.toUpperCase();
+				var res = type.toUpperCase();
 				if(arg) {
-					if(res === 'HL') arg = convertRc(arg);
+					if(reCellArg.test(type)) arg = convertRc(arg);
 					res += arg;
 				}
-				if(dt) res += 'T' + dt;
+				res += tSepB + (dt || 0);
 			} catch(err) {
 				console.error(err);
 				console.error('Error in Replay.actA2B for act:', act);
@@ -443,13 +447,60 @@ const Replay = (() => {
 		return act => {
 			try {
 				reActB.lastIndex = 0;
-				var [_, res, arg, dt] = reActB.exec(act);
+				var [_, type, arg, dt] = reActB.exec(act);
 				reActB.lastIndex = 0;
+				var res = type;
 				if(arg) {
-					if(res === 'HL') arg = convertRc(arg);
+					if(reCellArg.test(res)) arg = convertRc(arg);
 					res += ':' + arg;
 				}
-				if(dt) res += '/' + dt;
+				if(dt) res += tSepA + dt;
+				res = res.toLowerCase();
+			} catch(err) {
+				console.error(err);
+				console.error('Error in Replay.actB2A for act:', act);
+				throw err;
+			}
+			return res;
+		};
+	};
+	const actA2C = Replay.actA2C = w => {
+		var convertRc = listRcvToNum(w);
+		return act => {
+			try {
+				reActA.lastIndex = 0;
+				var [_, type, arg, dt] = reActA.exec(act);
+				reActA.lastIndex = 0;
+				console.log(act, type, arg, dt);
+				var res = String.fromCodePoint(actA.indexOf(type) + 'A'.codePointAt(0));
+				console.log(res);
+				if(arg) {
+					if(reCellArg.test(type)) arg = convertRc(arg);
+					res += arg;
+				}
+				res += tSepC + (dt || 0);
+			} catch(err) {
+				console.error(err);
+				console.error('Error in Replay.actA2B for act:', act);
+				throw err;
+			}
+			console.log(res);
+			return res;
+		};
+	};
+	const actC2A = Replay.actC2A = w => {
+		var convertRc = listNumToRcv(w);
+		return act => {
+			try {
+				reActC.lastIndex = 0;
+				var [_, type, arg, dt] = reActC.exec(act);
+				reActC.lastIndex = 0;
+				var res = actA[type.codePointAt(0) - 'A'.codePointAt(0)];
+				if(arg) {
+					if(reCellArg.test(res)) arg = convertRc(arg);
+					res += ':' + arg;
+				}
+				if(dt) res += tSepA + dt;
 				res = res.toLowerCase();
 			} catch(err) {
 				console.error(err);
@@ -461,6 +512,8 @@ const Replay = (() => {
 	};
 	const replayA2B = Replay.replayA2B = (replay, w = 9) => replay.match(reActA).map(actA2B(w)).join('');
 	const replayB2A = Replay.replayB2A = (replay, w = 9) => replay.match(reActB).map(actB2A(w)).join(',');
+	const replayA2C = Replay.replayA2C = (replay, w = 9) => replay.match(reActA).map(actA2C(w)).join('');
+	const replayC2A = Replay.replayC2A = (replay, w = 9) => replay.match(reActC).map(actC2A(w)).join(',');
 	return Replay;
 })();
 
@@ -472,6 +525,7 @@ const Puzzle = (() => {
 		this.undoStack = [];
 		this.redoStack = [];
 		this.cells = [];
+		this.selectedCells = [];
 		this.puzzleCache = {};
 		//this.highlightedCells = [];
 		this.startTime = this.lastActTime = Date.now();
@@ -479,7 +533,7 @@ const Puzzle = (() => {
 		
 		Object.defineProperties(this, {
 			currentPuzzle: {get: () => this.app.currentPuzzle, set: (val) => this.app.currentPuzzle = val},
-			highlightedCells: {get: () => this.app.highlightedCells, set: (val) => this.app.highlightedCells = val},
+			//highlightedCells: {get: () => this.app.highlightedCells, set: (val) => this.app.highlightedCells = val},
 			rows: {get: () => this.grid.rows, set: (val) => this.grid.rows = val},
 			cols: {get: () => this.grid.cols, set: (val) => this.grid.cols = val},
 		});
@@ -488,9 +542,11 @@ const Puzzle = (() => {
 	Puzzle.reRCRange = /^r([0-9]+)c([0-9]+)(?:-r([0-9]+)c([0-9]+))?$/;
 	Puzzle.reRCVal = /^r([0-9]+)c([0-9]+)(?:\s*[:=]\s*([a-zA-Z0-9]+))?$/;
 	Puzzle.reRCSplit = /(?=r[0-9]+c[0-9]+)/;
-	Puzzle.reActionStr = /^(hl|vl|pm|cd|co|cl)(?:\:(.+))?$/;
+	Puzzle.reActionStr = /^(hl|sl|ds|vl|pm|cd|co|cl)(?:\:(.+))?$/;
 	Puzzle.ActionLongToShort = {
-		highlight: 'hl',
+		highlight: 'sl',
+		select: 'sl',
+		deselect: 'ds',
 		value: 'vl',
 		pencilmarks: 'pm',
 		candidates: 'cd',
@@ -500,7 +556,9 @@ const Puzzle = (() => {
 		redo: 'rd',
 	};
 	Puzzle.ActionShortToLong = {
-		hl: 'highlight',
+		hl: 'select',
+		sl: 'select',
+		ds: 'deselect',
 		vl: 'value',
 		pm: 'pencilmarks',
 		cd: 'candidates',
@@ -509,6 +567,7 @@ const Puzzle = (() => {
 		ud: 'redo',
 		rd: 'undo',
 	};
+	Puzzle.Modes = ['normal', 'corner', 'centre', 'colour', 'pen'];
 	Puzzle.parseRCVal = function(rcv) {
 		var [_, r, c, val] = Puzzle.reRCVal.exec(rcv);
 		return [r, c, val];
@@ -530,7 +589,7 @@ const Puzzle = (() => {
 		};
 	// Board
 		P.clearPuzzle = function() {
-			this.clearHighlight();
+			this.deselect(undefined, true);
 			this.grid.cells.forEach(row => row.forEach(cell => cell.clear({levels: 3})));
 		};
 		P.createPuzzle = function({rows = this.rows, cols = this.cols}) {
@@ -613,17 +672,68 @@ const Puzzle = (() => {
 		};
 	// Highlight
 		P.clearHighlight = function() {
+			console.error('DEPRECATED!');
 			//console.info('Puzzle.clearHighlight();', this.highlightedCells);
 			this.cells.forEach(cell => cell.error(false));
 			this.highlightedCells.forEach(cell => cell.highlight(false));
 			return this;
 		};
-		P.highlightCells = function(cells) {
-			if(cells !== undefined) {
-				if(!Array.isArray(cells)) cells = [cells];
-				cells.forEach(cell => cell.highlight(true));
+		P.getSelectedCells = function() {
+			//return this.cells.filter(cell => cell.hasState('highlight'));
+			return this.selectedCells;
+		};
+		P.select = function(cells, skipAct) {
+			console.info('Puzzle.select(%s);', this.cellsToString(cells));
+
+			if(cells === undefined) throw new Error('Select requires cells');
+			if(!Array.isArray(cells)) cells = [cells];
+
+			console.info(' select > cells:', this.cellsToString(cells));
+			
+			var selectedCells = this.getSelectedCells();
+			
+			console.info(' select > selectedCells:', this.cellsToString(selectedCells));
+			console.info(' select > filtered cells:', this.cellsToString(cells.filter(cell => !selectedCells.includes(cell))));
+			cells = cells.filter(cell => !selectedCells.includes(cell));
+			
+			if(!Array.isArray(cells)) cells = [cells];
+			
+			if(cells.length === 0) {
+				//console.warn('deselect: no cells to select');
+				return false;
 			}
-			return this;
+			
+			cells.forEach(cell => {
+				cell.highlight(true);
+				this.selectedCells.push(cell);
+			});
+			if(skipAct !== true) this.act({type: 'select', arg: cells});
+		};
+		P.deselect = function(cells, skipAct) {
+			console.info('Puzzle.deselect(%s);', this.cellsToString(cells));
+			console.error('DESELECT');
+			if(cells === undefined) {
+				cells = [...this.getSelectedCells()];
+			}
+			if(!Array.isArray(cells)) cells = [cells];
+
+			console.info(' deselect > cells:', this.cellsToString(cells));
+			var selectedCells = this.getSelectedCells();
+			
+			console.info(' deselect > selectedCells:', this.cellsToString(selectedCells));
+			if(cells.length === 0) {
+				console.warn('deselect: no cells to deselect');
+				return false;
+			}
+			
+			cells.forEach(cell => {
+				cell.highlight(false);
+				this.selectedCells.splice(this.selectedCells.indexOf(cell), 1);
+			});
+			
+			console.info(' deselect > cells:', cells);
+			console.info(' deselect > cells:', this.cellsToString(cells));
+			if(skipAct !== true) this.act({type: 'deselect', arg: cells});
 		};
 	// Actions
 		P.cellsToString = function(cells) {
@@ -635,13 +745,21 @@ const Puzzle = (() => {
 			return cells || '-';
 		};
 		P.actionToString = function(action) {
+			if(typeof action === 'string') return action;
 			const type = Puzzle.ActionLongToShort[action.type] || '-';
 			var arg = '-';
-			if(type === 'hl') {
-				arg = this.cellsToString(action.cells);
-			}
-			else if(action.value !== undefined) {
-				arg = action.value;
+			switch(type) {
+				case 'hl':
+				case 'sl':
+				case 'ds':
+					arg = this.cellsToString(action.arg);
+					break;
+				case 'cl': 
+					console.warn('actionToString CLEAR:', action, type, action.arg, Puzzle.Modes, Puzzle.Modes.indexOf(action.arg));
+					arg = Puzzle.Modes.indexOf(action.arg);
+					break;
+				default:
+					if(action.arg !== undefined) arg = action.arg;
 			}
 			return type + (arg !== '-' ? ':' + arg : '');
 		};
@@ -665,15 +783,19 @@ const Puzzle = (() => {
 			if(typeof action === 'string') {
 				const [_, type, arg] = Puzzle.reActionStr.exec(action);
 				action = {type: Puzzle.ActionShortToLong[type] || 'unknown'};
-				if(type === 'hl') {
-					action.cells = this.parseCells(arg);
-				}
-				else if(arg !== undefined && arg !== '-') {
-					action.value = arg;
+				switch(type) {
+					case 'hl':
+					case 'sl':
+					case 'ds':
+						action.arg = this.parseCells(arg);
+						break;
+					case 'cl': action.arg = Puzzle.Modes[arg]; break;
+					default:
+						if(arg !== undefined && arg !== '-') action.arg = arg;
 				}
 			}
-			else if(action.cells !== undefined) {
-				action.cells = this.parseCells(action.cells);
+			else {
+				//if(action.type === 'select') action.arg = this.parseCells(action.arg);
 			}
 			return action;
 		};
@@ -683,32 +805,62 @@ const Puzzle = (() => {
 			this.replayStack.push(act + '/' + Math.round(dt / Puzzle.logTimeResolutionMs));
 		};
 		P.exec = function(action) {
-			//console.info('Puzzle.exec(action);', action);
-			var {type, cells, value} = this.parseAction(action);
-			if(cells === undefined) cells = this.highlightedCells;
+			var cells = this.highlightedCells, {type, arg} = this.parseAction(action);
+			console.info('Puzzle.exec("%s");', this.actionToString(action));
 			switch(type) {
-				case 'highlight': if(this.cellsToString(cells) === this.cellsToString(this.highlightedCells)) return false;
+				case 'highlight':
+				case 'select':
+					if(typeof arg === 'string') arg = this.parseCells(arg);
+					console.error('Implement SELECT:', this.cellsToString(arg));
+					var selectedCells = this.cells.filter(cell => cell.hasState('highlight'));
+					var prevSel = this.cellsToString(this.highlightedCells);
+					var nextSel = this.cellsToString(selectedCells);
+					console.log('  prevSel:', prevSel);
+					console.log('  nextSel:', nextSel);
+					/*
+					if(typeof arg === 'string') {
+						//console.warn('arg is string:', action, arg);
+						arg = this.parseCells(arg);
+						//console.warn('  arg parsed:', arg);
+					}
+					if(arg === undefined) arg = this.highlightedCells;
+					
+					//console.log('  cellsToString(arg):', this.cellsToString(arg));
+					//console.log('  cellsToString(highlightedCells):', this.cellsToString(this.highlightedCells));
+					
+					//if(this.cellsToString(arg) === this.cellsToString(this.highlightedCells)) return false;
 					this.clearHighlight();
-					this.highlightCells(cells);
+					//console.log('  select(arg):', arg);
+					this.select(arg);
 					this.highlightedCells.length = 0;
-					this.highlightedCells.push.apply(this.highlightedCells, cells);
+					this.highlightedCells.push.apply(this.highlightedCells, arg);
+					*/
 					return true;
-				case 'clear': cells.forEach(cell => cell.clear({mode: this.app.mode})); return true;
-				case 'value': cells.forEach(cell => cell.setValue(value)); return true;
-				case 'candidates': cells.forEach(cell => cell.toggleCandidates(value)); return true;
-				case 'pencilmarks': cells.forEach(cell => cell.togglePencilMark(value)); return true;
-				case 'colour': cells.forEach(cell => cell.toggleColour(value)); return true;
+				case 'deselect':
+					if(typeof arg === 'string') arg = this.parseCells(arg);
+					console.error('Implement DESELECT:', this.cellsToString(arg));
+					return true;
+				case 'clear': cells.forEach(cell => cell.clear({mode: arg})); return true;
+				case 'value': cells.forEach(cell => cell.setValue(arg)); return true;
+				case 'candidates': cells.forEach(cell => cell.toggleCandidates(arg)); return true;
+				case 'pencilmarks': cells.forEach(cell => cell.togglePencilMark(arg)); return true;
+				case 'colour': cells.forEach(cell => cell.toggleColour(arg)); return true;
 				default: console.error('Puzzle.act: unkown action type:', type, action); return false;
 			}
 			throw new Error('Invalid type!');
 		};
 		P.act = function(action) {
 			var act = typeof action === 'string' ? action : this.actionToString(action);
-			//console.warn('Puzzle.act("%s");', act);
-			if(action.type !== 'highlight') {
+			console.warn('Puzzle.act("%s");', act, action);
+			if(!/^(highlight|select|deselect|undo|redo)$/.test(action.type)) {
+				console.warn('Messing with highlight:', action);
 				var nextHighlightedCells = this.cells.filter(cell => cell.hasState('highlight'));
+				
 				var prevHL = this.cellsToString(this.highlightedCells);
 				var nextHL = this.cellsToString(nextHighlightedCells);
+				//console.log('  prevHL:', prevHL);
+				//console.log('  nextHL:', nextHL);
+				
 				if(prevHL !== nextHL) {
 					//console.warn('Squeeze highlight in before action:', action);
 					// Squeeze highlight in before action
@@ -723,10 +875,12 @@ const Puzzle = (() => {
 			}
 			if(action === 'ud' || action.type === 'undo') {
 				if(this.undoStack.length > 0) {
+					//console.log('PRE UNDO:', this.undoStack.join(', '));
 					this.logReplayAct(act);
 					var undoAct = this.undoStack.pop();
 					this.redoStack.push(undoAct);
 					this.clearPuzzle();
+					//console.log('  POST UNDO:', this.undoStack.join(', '));
 					this.undoStack.forEach(act => this.exec(act));
 				}
 			}
@@ -830,7 +984,7 @@ const Puzzle = (() => {
 			console.info('Puzzle.check();', this.currentPuzzle);
 			var puzzle = this.currentPuzzle;
 			if(!puzzle) return;
-			this.clearHighlight();
+			//this.clearHighlight();
 			var errors = [];
 			var cells = this.cells;
 			this.checkCells(cells, errors);
@@ -889,7 +1043,7 @@ const App = (() => {
 	}
 	var P = Object.assign(App.prototype, {constructor: App});
 	App.reDigit = /^(?:Numpad|Digit|btn-)([0-9])$/;
-	App.Modes = ['normal', 'corner', 'centre', 'colour', 'pen'];
+	App.Modes = Puzzle.Modes;
 	App.ModeToAction = {
 		'normal': 'value',
 		'corner': 'pencilmarks',
@@ -1021,8 +1175,9 @@ const App = (() => {
 			document.querySelector('.controls-main').classList.add('mode-' + mode);
 			this.mode = mode;
 		};
-		P.clearHighlight = function() { return this.puzzle.clearHighlight(); };
-		P.highlightCells = function(cells) { return this.puzzle.highlightCells(cells); };
+		//P.clearHighlight = function() { return this.puzzle.clearHighlight(); };
+		P.select = function(cells) { return this.puzzle.select(cells); };
+		P.deselect = function(cells) { return this.puzzle.deselect(cells); };
 		P.smartSelectCell = function(cell) {
 			//console.info('App.smartSelectCell(cell);');
 			const makeSelector = (cell, type) => {
@@ -1046,7 +1201,7 @@ const App = (() => {
 			if(selector !== undefined) cells = this.grid.getCellList().filter(selector);
 			if(cells.length > 0) {
 				this.highlightedCells.length = 0;
-				this.act({type: 'highlight', cells: cells});
+				//this.act({type: 'select', arg: cells});
 			}
 		};
 	// Test Dot Puzzle
@@ -1168,8 +1323,8 @@ const App = (() => {
 		};
 		
 		P.handleCancel = function(event) {
-			//console.info('App.handleCancel:', event.type, event, event.target);
-			if(this.isDragging === false) this.clearHighlight();
+			console.info('App.handleCancel:', event.type, event, event.target);
+			if(this.isDragging === false) this.deselect();
 		};
 		P.handleDragStart = function(event) {
 			if(event.target.nodeName === 'BUTTON') return;
@@ -1177,15 +1332,21 @@ const App = (() => {
 			this.isDragging = true;
 			this.handleCancelRestartPuzzle();
 			if(!event.target.classList.contains('cell')) {
-				this.act({type: 'highlight', cells: 'none'});
-				return this.clearHighlight();
+				//this.act({type: 'deselect'});
+				return this.deselect();
 			}
 			this.highlighting = true;
-			if(!event.ctrlKey && event.target.nodeName !== 'BUTTON') this.clearHighlight();
+			if(!event.ctrlKey && event.target.nodeName !== 'BUTTON') this.deselect();
 			var cell = this.grid.elemToCell(event.target);
 			if(cell) {
 				if(event.ctrlKey && cell.hasState('highlight')) this.highlighting = false;
-				cell.highlight(this.highlighting);
+				//cell.highlight(this.highlighting);
+				if(this.highlighting) {
+					this.select(cell);
+				}
+				else {
+					this.deselect(cell);
+				}
 			}
 		};
 		P.handleDragEnd = function(event) {
@@ -1193,7 +1354,7 @@ const App = (() => {
 			this.isDragging = false;
 			if(this.highlighting !== undefined) {
 				var nextHighlightedCells = this.grid.getCellList().filter(cell => cell.hasState('highlight'));
-				this.act({type: 'highlight', cells: nextHighlightedCells});
+				//this.act({type: 'select', arg: nextHighlightedCells});
 				this.highlighting = undefined;
 			}
 			//event.preventDefault();
@@ -1205,7 +1366,8 @@ const App = (() => {
 			if(this.highlighting !== undefined) {
 				var cell = this.grid.elemToCell(eventTarget);
 				if(cell) {
-					cell.highlight(this.highlighting);
+					//cell.highlight(this.highlighting);
+					this.select(cell);
 				}
 			}
 		};
@@ -1213,14 +1375,14 @@ const App = (() => {
 			//console.log('App.doPressDigit(%s); mode: %s', digit, this.mode);
 			if(this.mode === 'colour' && digit === '1') {
 				//console.log('Pressed colour 1!');
-				this.act({type: 'clear'});
+				this.act({type: 'clear', arg: this.mode});
 			}
 			else {
-				this.act({type: App.ModeToAction[this.mode], value: digit});
+				this.act({type: App.ModeToAction[this.mode], arg: digit});
 			}
 		};
 		P.handleKeydown = function(event) {
-			//console.info('App.handleKeydown:', event.type, event, event.target);
+			console.info('App.handleKeydown:', event.type, event, event.target);
 			if(event.repeat) return;
 			if(App.reDigit.test(event.code)) {
 				this.doPressDigit(event.code.replace(App.reDigit, '$1'));
@@ -1236,8 +1398,8 @@ const App = (() => {
 				this.changeMode('corner', true);
 			}
 			else if(event.key === 'Escape') {
-				this.clearHighlight();
-				this.act({type: 'highlight', cells: 'none'});
+				this.deselect();
+				this.act({type: 'deselect'});
 			}
 			else if(event.code === 'Space') {
 				var modes = App.Modes;
@@ -1246,13 +1408,17 @@ const App = (() => {
 				this.changeMode(nextMode);
 			}
 			else if(['Backspace', 'Delete'].includes(event.key)) {
-				this.act({type: 'clear'});
+				this.act({type: 'clear', arg: this.mode});
 			}
 			else if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+				var selectedCells = this.puzzle.getSelectedCells();
 				var highlightedCells = this.highlightedCells;
-				if(highlightedCells.length > 0) {
-					var highlightCell = this.highlightedCells[this.highlightedCells.length - 1];
-					var {row, col} = highlightCell;
+				console.log('highlightedCells:', highlightedCells);
+				console.log('selectedCells:', this.puzzle.cellsToString(this.puzzle.selectedCells));
+				if(selectedCells.length > 0) {
+					//var highlightCell = this.highlightedCells[this.highlightedCells.length - 1];
+					var selectCell = selectedCells[selectedCells.length - 1];
+					var {row, col} = selectCell;
 					var cols = this.grid.cells.length, rows = this.grid.cells[row].length;
 					switch(event.key) {
 						case 'ArrowLeft': col = (col + cols - 1) % cols; break;
@@ -1260,14 +1426,15 @@ const App = (() => {
 						case 'ArrowUp': row = (row + rows - 1) % rows; break;
 						case 'ArrowDown': row = (row + rows + 1) % rows; break;
 					}
-					highlightCell = this.grid.getCell(row, col);
+					selectCell = this.grid.getCell(row, col);
 					if(!event.ctrlKey) {
-						this.clearHighlight().highlightCells(highlightCell);
-						this.act({type: 'highlight', cells: highlightCell});
+						this.deselect();
+						this.select(selectCell);
+						//this.act({type: 'select', arg: highlightCell});
 					}
 					else {
-						this.highlightCells(highlightCell);
-						this.act({type: 'highlight', cells: this.highlightedCells.concat(highlightCell)});
+						this.select(selectCell);
+						//this.act({type: 'select', arg: this.highlightedCells.concat(highlightCell)});
 					}
 				}
 			}
@@ -1300,7 +1467,7 @@ const App = (() => {
 				this.changeMode(control);
 			}
 			switch(control) {
-				case 'delete': this.act({type: 'clear'}); break;
+				case 'delete': this.act({type: 'clear', arg: this.mode}); break;
 				case 'undo': this.act({type: 'undo'}); break;
 				case 'redo': this.act({type: 'redo'}); break;
 				case 'restart':
