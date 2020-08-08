@@ -421,13 +421,20 @@ const Replay = (() => {
 	};
 	const listRcvToNum = Replay.listRcvToNum = w => rcvList => rcvList.toLowerCase().match(reRCVal).map(rcToNum(w)).join('');
 	const listNumToRcv = Replay.listNumToRcv = w => numList => numList.toLowerCase().match(reNum).map(numToRc(w)).join('');
+	const reExec = re => str => {
+		re.lastIndex = 0;
+		var [_, ...res] = re.exec(str);
+		re.lastIndex = 0;
+		return res;
+	};
+	const parseActA = Replay.parseActA = reExec(reActA);
+	const parseActB = Replay.parseActB = reExec(reActB);
+	const parseActC = Replay.parseActC = reExec(reActC);
 	const actA2B = Replay.actA2B = w => {
 		var convertRc = listRcvToNum(w);
 			return act => {
 			try {
-				reActA.lastIndex = 0;
-				var [_, type, arg, dt] = reActA.exec(act);
-				reActA.lastIndex = 0;
+				var [type, arg, dt] = parseActA(act);
 				var res = type.toUpperCase();
 				if(arg) {
 					if(reCellArg.test(type)) arg = convertRc(arg);
@@ -446,9 +453,7 @@ const Replay = (() => {
 		var convertRc = listNumToRcv(w);
 		return act => {
 			try {
-				reActB.lastIndex = 0;
-				var [_, type, arg, dt] = reActB.exec(act);
-				reActB.lastIndex = 0;
+				var [type, arg, dt] = parseActB(act);
 				var res = type;
 				if(arg) {
 					if(reCellArg.test(res)) arg = convertRc(arg);
@@ -468,12 +473,8 @@ const Replay = (() => {
 		var convertRc = listRcvToNum(w);
 		return act => {
 			try {
-				reActA.lastIndex = 0;
-				var [_, type, arg, dt] = reActA.exec(act);
-				reActA.lastIndex = 0;
-				console.log(act, type, arg, dt);
+				var [type, arg, dt] = parseActA(act);
 				var res = String.fromCodePoint(actA.indexOf(type) + 'A'.codePointAt(0));
-				console.log(res);
 				if(arg) {
 					if(reCellArg.test(type)) arg = convertRc(arg);
 					res += arg;
@@ -484,7 +485,6 @@ const Replay = (() => {
 				console.error('Error in Replay.actA2B for act:', act);
 				throw err;
 			}
-			console.log(res);
 			return res;
 		};
 	};
@@ -492,9 +492,7 @@ const Replay = (() => {
 		var convertRc = listNumToRcv(w);
 		return act => {
 			try {
-				reActC.lastIndex = 0;
-				var [_, type, arg, dt] = reActC.exec(act);
-				reActC.lastIndex = 0;
+				var [type, arg, dt] = parseActC(act);
 				var res = actA[type.codePointAt(0) - 'A'.codePointAt(0)];
 				if(arg) {
 					if(reCellArg.test(res)) arg = convertRc(arg);
@@ -521,6 +519,7 @@ const Puzzle = (() => {
 	function Puzzle(opts = {}) {
 		this.app = opts.app;
 		this.grid = this.app.grid;
+		this.currentPuzzle = undefined;
 		this.replayStack = [];
 		this.undoStack = [];
 		this.redoStack = [];
@@ -534,6 +533,7 @@ const Puzzle = (() => {
 		Object.defineProperties(this, {
 			currentPuzzle: {get: () => this.app.currentPuzzle, set: (val) => this.app.currentPuzzle = val},
 			//highlightedCells: {get: () => this.app.highlightedCells, set: (val) => this.app.highlightedCells = val},
+			highlightedCells: {get: () => console.error('Puzzle.highlightedCells GET DEPRECATED!'), set: (val) => console.error('Puzzle.highlightedCells SET DEPRECATED!')},
 			rows: {get: () => this.grid.rows, set: (val) => this.grid.rows = val},
 			cols: {get: () => this.grid.cols, set: (val) => this.grid.cols = val},
 		});
@@ -542,7 +542,6 @@ const Puzzle = (() => {
 	Puzzle.reRCRange = /^r([0-9]+)c([0-9]+)(?:-r([0-9]+)c([0-9]+))?$/;
 	Puzzle.reRCVal = /^r([0-9]+)c([0-9]+)(?:\s*[:=]\s*([a-zA-Z0-9]+))?$/;
 	Puzzle.reRCSplit = /(?=r[0-9]+c[0-9]+)/;
-	Puzzle.reActionStr = /^(hl|sl|ds|vl|pm|cd|co|cl)(?:\:(.+))?$/;
 	Puzzle.ActionLongToShort = {
 		highlight: 'sl',
 		select: 'sl',
@@ -589,7 +588,7 @@ const Puzzle = (() => {
 		};
 	// Board
 		P.clearPuzzle = function() {
-			this.deselect(undefined, true);
+			this.clearSelection();
 			this.grid.cells.forEach(row => row.forEach(cell => cell.clear({levels: 3})));
 		};
 		P.createPuzzle = function({rows = this.rows, cols = this.cols}) {
@@ -606,9 +605,9 @@ const Puzzle = (() => {
 				this.redoStack.length = 0;
 			}
 			*/
-			this.app.replayStack.length = 0;
-			this.app.undoStack.length = 0;
-			this.app.redoStack.length = 0;
+			this.replayStack.length = 0;
+			this.undoStack.length = 0;
+			this.redoStack.length = 0;
 			this.startTime = this.lastActTime = Date.now();
 			this.clearPuzzle();
 		};
@@ -653,7 +652,6 @@ const Puzzle = (() => {
 			return this.loadRemoteCTCPuzzle(state.id)
 				.then(() => data.state.split('|').forEach((data, idx) => this.grid.getCell(Math.floor(idx / 9), idx % 9).deserialize(data)));	 
 		};
-		//app.puzzle.deserializeState('///4|///4|///4|///7|///4|///4|///4|///4|1/1,9//7|///4|///4|1///7|///4|///4|///4|9/1,9//7|///4|///4|9///7|///4|///4|///4|///4|1///7|///4|///4|///4|///4||///4|///4|///7|///4|///4||///4|/7,8//4|/1,9//7|///4|/2,3,5,6//4|///4|///4|/2,3,5,6//4|///7|/7,8//4|///4||///4|///4|9///7|///4|///4||///4|///4|///4|///4|1///7|///4|///4|///4||9/1,9//7|/3,4,8//4|/3,4,8//4|9///7|/5,6,7//4|/5,6,7//4|/5,6//4|1///7|/4,8//4|2///4|///7|///4|///4|///4|///4|///7|/4,6//4/1|/4,6//4/1|///4');
 		P.loadCTCPuzzle = function(ctcPuzzle) {
 			var puzzle = this.app.convertPuzzle(ctcPuzzle);
 			this.loadPuzzle(puzzle);
@@ -670,70 +668,27 @@ const Puzzle = (() => {
 				.then(ctcPuzzle => this.loadCTCPuzzle(ctcPuzzle))
 				.catch(err => console.error('fetch error:', err));
 		};
-	// Highlight
-		P.clearHighlight = function() {
-			console.error('DEPRECATED!');
-			//console.info('Puzzle.clearHighlight();', this.highlightedCells);
-			this.cells.forEach(cell => cell.error(false));
-			this.highlightedCells.forEach(cell => cell.highlight(false));
-			return this;
+	// Selection
+		P.clearSelection = function() {
+			//console.info('Puzzle.clearSelection();');
+			this.selectedCells.forEach(cell => cell.highlight(false));
+			this.selectedCells.length = 0;
 		};
-		P.getSelectedCells = function() {
-			//return this.cells.filter(cell => cell.hasState('highlight'));
-			return this.selectedCells;
-		};
-		P.select = function(cells, skipAct) {
-			console.info('Puzzle.select(%s);', this.cellsToString(cells));
-
+		P.select = function(cells) {
+			var selectedCells = this.selectedCells;
 			if(cells === undefined) throw new Error('Select requires cells');
-			if(!Array.isArray(cells)) cells = [cells];
-
-			console.info(' select > cells:', this.cellsToString(cells));
-			
-			var selectedCells = this.getSelectedCells();
-			
-			console.info(' select > selectedCells:', this.cellsToString(selectedCells));
-			console.info(' select > filtered cells:', this.cellsToString(cells.filter(cell => !selectedCells.includes(cell))));
+			if(!Array.isArray(cells)) cells = [cells];			
+			//console.info('Puzzle.select([%s]);', this.cellsToString(cells));
 			cells = cells.filter(cell => !selectedCells.includes(cell));
-			
-			if(!Array.isArray(cells)) cells = [cells];
-			
-			if(cells.length === 0) {
-				//console.warn('deselect: no cells to select');
-				return false;
-			}
-			
-			cells.forEach(cell => {
-				cell.highlight(true);
-				this.selectedCells.push(cell);
-			});
-			if(skipAct !== true) this.act({type: 'select', arg: cells});
+			if(cells.length > 0) this.act({type: 'select', arg: cells});
 		};
 		P.deselect = function(cells, skipAct) {
-			console.info('Puzzle.deselect(%s);', this.cellsToString(cells));
-			console.error('DESELECT');
-			if(cells === undefined) {
-				cells = [...this.getSelectedCells()];
-			}
+			var selectedCells = this.selectedCells;
+			if(cells === undefined) cells = [...selectedCells];
 			if(!Array.isArray(cells)) cells = [cells];
-
-			console.info(' deselect > cells:', this.cellsToString(cells));
-			var selectedCells = this.getSelectedCells();
-			
-			console.info(' deselect > selectedCells:', this.cellsToString(selectedCells));
-			if(cells.length === 0) {
-				console.warn('deselect: no cells to deselect');
-				return false;
-			}
-			
-			cells.forEach(cell => {
-				cell.highlight(false);
-				this.selectedCells.splice(this.selectedCells.indexOf(cell), 1);
-			});
-			
-			console.info(' deselect > cells:', cells);
-			console.info(' deselect > cells:', this.cellsToString(cells));
-			if(skipAct !== true) this.act({type: 'deselect', arg: cells});
+			//console.info('Puzzle.deselect([%s]);', this.cellsToString(cells));
+			cells = cells.filter(cell => selectedCells.includes(cell));
+			if(cells.length !== 0) this.act({type: 'deselect', arg: cells});
 		};
 	// Actions
 		P.cellsToString = function(cells) {
@@ -765,9 +720,8 @@ const Puzzle = (() => {
 		};
 		P.parseCells = function(cells) {
 			//console.info('Puzzle.parseCells(cells);', cells);
-			if(cells === 'none' || cells === '-' || cells === '') cells = [];
-			if(cells === 'highlighted') cells = this.highlightedCells;
-			if(cells === undefined) cells = this.highlightedCells;
+			if(['none', '-', ''].includes(cells)) cells = [];
+			if(['highlighted', 'selected', undefined].includes(cells)) cells = this.selectedCells;
 			if(typeof cells === 'string') {
 				//cells = (cells.split(/\s*,\s*/) || [])
 				cells = (cells.split(Puzzle.reRCSplit) || [])
@@ -775,13 +729,13 @@ const Puzzle = (() => {
 					.map(([r, c, val]) => this.grid.getCell(r - 1, c - 1));
 			}
 			if(!Array.isArray(cells)) cells = [cells];
-			if(cells === this.highlightedCells) cells = [...cells];
+			if(cells === this.selectedCells) cells = [...cells];
 			return cells;
 		};
 		P.parseAction = function(action) {
 			//console.info('Puzzle.parseAction(action);', action);
-			if(typeof action === 'string') {
-				const [_, type, arg] = Puzzle.reActionStr.exec(action);
+			if(typeof action === 'string') {				
+				const [type, arg, time] = Replay.parseActA(action);
 				action = {type: Puzzle.ActionShortToLong[type] || 'unknown'};
 				switch(type) {
 					case 'hl':
@@ -794,9 +748,6 @@ const Puzzle = (() => {
 						if(arg !== undefined && arg !== '-') action.arg = arg;
 				}
 			}
-			else {
-				//if(action.type === 'select') action.arg = this.parseCells(action.arg);
-			}
 			return action;
 		};
 		P.logReplayAct = function(act) {
@@ -805,74 +756,79 @@ const Puzzle = (() => {
 			this.replayStack.push(act + '/' + Math.round(dt / Puzzle.logTimeResolutionMs));
 		};
 		P.exec = function(action) {
-			var cells = this.highlightedCells, {type, arg} = this.parseAction(action);
-			console.info('Puzzle.exec("%s");', this.actionToString(action));
+			var {type, arg} = this.parseAction(action), selectedCells = this.selectedCells;
+			//console.info('Puzzle.exec("%s");', this.actionToString(action));
 			switch(type) {
 				case 'highlight':
 				case 'select':
 					if(typeof arg === 'string') arg = this.parseCells(arg);
-					console.error('Implement SELECT:', this.cellsToString(arg));
-					var selectedCells = this.cells.filter(cell => cell.hasState('highlight'));
-					var prevSel = this.cellsToString(this.highlightedCells);
-					var nextSel = this.cellsToString(selectedCells);
-					console.log('  prevSel:', prevSel);
-					console.log('  nextSel:', nextSel);
+					//if(arg === undefined) arg = [...selectedCells]
+					if(arg === undefined) console.error('Cannot select UNDEFINED cells!');
+					arg.forEach(cell => {
+						cell.highlight(true);
+						selectedCells.push(cell);
+					});
 					/*
-					if(typeof arg === 'string') {
-						//console.warn('arg is string:', action, arg);
-						arg = this.parseCells(arg);
-						//console.warn('  arg parsed:', arg);
-					}
-					if(arg === undefined) arg = this.highlightedCells;
-					
-					//console.log('  cellsToString(arg):', this.cellsToString(arg));
-					//console.log('  cellsToString(highlightedCells):', this.cellsToString(this.highlightedCells));
-					
-					//if(this.cellsToString(arg) === this.cellsToString(this.highlightedCells)) return false;
-					this.clearHighlight();
-					//console.log('  select(arg):', arg);
-					this.select(arg);
-					this.highlightedCells.length = 0;
-					this.highlightedCells.push.apply(this.highlightedCells, arg);
+						if(typeof arg === 'string') {
+							//console.warn('arg is string:', action, arg);
+							arg = this.parseCells(arg);
+							//console.warn('  arg parsed:', arg);
+						}
+						if(arg === undefined) arg = this.highlightedCells;
+
+						//console.log('  cellsToString(arg):', this.cellsToString(arg));
+						//console.log('  cellsToString(highlightedCells):', this.cellsToString(this.highlightedCells));
+
+						//if(this.cellsToString(arg) === this.cellsToString(this.highlightedCells)) return false;
+						this.deselect();
+						//console.log('  select(arg):', arg);
+						this.select(arg);
+						this.highlightedCells.length = 0;
+						this.highlightedCells.push.apply(this.highlightedCells, arg);
 					*/
 					return true;
 				case 'deselect':
 					if(typeof arg === 'string') arg = this.parseCells(arg);
-					console.error('Implement DESELECT:', this.cellsToString(arg));
+					arg.forEach(cell => {
+						cell.highlight(false);
+						this.selectedCells.splice(this.selectedCells.indexOf(cell), 1);
+					});
+					//console.error('Implement DESELECT:', this.cellsToString(arg));
 					return true;
-				case 'clear': cells.forEach(cell => cell.clear({mode: arg})); return true;
-				case 'value': cells.forEach(cell => cell.setValue(arg)); return true;
-				case 'candidates': cells.forEach(cell => cell.toggleCandidates(arg)); return true;
-				case 'pencilmarks': cells.forEach(cell => cell.togglePencilMark(arg)); return true;
-				case 'colour': cells.forEach(cell => cell.toggleColour(arg)); return true;
+				case 'clear': selectedCells.forEach(cell => cell.clear({mode: arg})); return true;
+				case 'value': selectedCells.forEach(cell => cell.setValue(arg)); return true;
+				case 'candidates': selectedCells.forEach(cell => cell.toggleCandidates(arg)); return true;
+				case 'pencilmarks': selectedCells.forEach(cell => cell.togglePencilMark(arg)); return true;
+				case 'colour': selectedCells.forEach(cell => cell.toggleColour(arg)); return true;
 				default: console.error('Puzzle.act: unkown action type:', type, action); return false;
 			}
 			throw new Error('Invalid type!');
 		};
 		P.act = function(action) {
-			var act = typeof action === 'string' ? action : this.actionToString(action);
-			console.warn('Puzzle.act("%s");', act, action);
-			if(!/^(highlight|select|deselect|undo|redo)$/.test(action.type)) {
+			action = this.parseAction(action);
+			var act = this.actionToString(action);
+			//console.info('Puzzle.act("%s");', act, action);
+			/*
+			if(!/^(highlight|select|deselect|undo|redo|hl|sl|ds|ud|rd)$/.test(action.type)) {
 				console.warn('Messing with highlight:', action);
-				var nextHighlightedCells = this.cells.filter(cell => cell.hasState('highlight'));
-				
-				var prevHL = this.cellsToString(this.highlightedCells);
-				var nextHL = this.cellsToString(nextHighlightedCells);
-				//console.log('  prevHL:', prevHL);
-				//console.log('  nextHL:', nextHL);
-				
-				if(prevHL !== nextHL) {
+				var nextSelectedCells = this.cells.filter(cell => cell.hasState('highlight'));
+				var prevSelection = this.cellsToString(this.selectedCells);
+				var nextSelection = this.cellsToString(nextSelectedCells);
+				console.log('  prevSelection:', prevSelection);
+				console.log('  nextSelection:', nextSelection);
+				if(prevSelection !== nextSelection) {
 					//console.warn('Squeeze highlight in before action:', action);
 					// Squeeze highlight in before action
-					var hlAction = {type: 'highlight', cells: nextHighlightedCells};
-					var hlAct = this.actionToString(hlAction);
-					if(this.exec(hlAction)) {
-						this.logReplayAct(hlAct);
+					var selAction = {type: 'select', cells: nextSelectedCells};
+					var selAct = this.actionToString(selAction);
+					if(this.exec(selAction)) {
+						this.logReplayAct(selAct);
 						this.redoStack.length = 0;
-						this.undoStack.push(hlAct);
+						this.undoStack.push(selAct);
 					}
 				}
 			}
+			*/
 			if(action === 'ud' || action.type === 'undo') {
 				if(this.undoStack.length > 0) {
 					//console.log('PRE UNDO:', this.undoStack.join(', '));
@@ -911,7 +867,7 @@ const Puzzle = (() => {
 			return playTime;
 		};
 		P.replayPlay = function(replay, opts = {}) {
-			//console.info('Puzzle.replayPlay(replay, opts);', replay, opts);
+			console.info('Puzzle.replayPlay(replay, opts);', replay, opts);
 			var actions = [...replay.actions],
 					maxDelay = opts.maxDelay || 5000,
 					speed = opts.speed || 1,
@@ -919,18 +875,17 @@ const Puzzle = (() => {
 					step = 0,
 					playTime = 0,
 					doAction = undefined;
-			//console.log('replayLength:', this.replayLength(replay));
 			const nextStep = () => {
 				if(doAction !== undefined) this.act(doAction);
 				if(actions.length <= step) return;
-				const [action, time] = actions[step++].split('/');
+				doAction = actions[step++];
+				const [type, arg, time] = Replay.parseActA(doAction);
 				const stepTime = Number(time) * Puzzle.logTimeResolutionMs;
 				playTime += stepTime;
 				if(playToTime !== -1 && playTime > playToTime) {
 					console.log('Exiting replay at step %s/%s time %s due to limit %s', step, actions.length, playTime, playToTime);
 					return;
 				}
-				doAction = action;
 				if(speed !== -1) {
 					const delay = Math.min(maxDelay, stepTime) / speed;
 					this.replayTimeoutId = setTimeout(nextStep, delay);
@@ -984,7 +939,7 @@ const Puzzle = (() => {
 			console.info('Puzzle.check();', this.currentPuzzle);
 			var puzzle = this.currentPuzzle;
 			if(!puzzle) return;
-			//this.clearHighlight();
+			//this.deselect();
 			var errors = [];
 			var cells = this.cells;
 			this.checkCells(cells, errors);
@@ -1033,13 +988,16 @@ const App = (() => {
 		this.highlighting = undefined;
 		this.mode = 'normal';
 		this.startTime = this.lastActTime = Date.now();
-		this.highlightedCells = [];
+		//this.highlightedCells = [];
+		//this.replayStack = [];
+		//this.undoStack = [];
+		//this.redoStack = [];
 		this.puzzleCache = {};
-		this.replayStack = [];
-		this.undoStack = [];
-		this.redoStack = [];
 		this.createPuzzle({rows: 9, cols: 9});
 		this.attachHandlers();
+		['highlightedCells', 'replayStack', 'undoStack', 'redoStack'].forEach(prop =>
+			Object.defineProperty(this, prop, {get: () => console.error('App.'+prop+' GET DEPRECATED!'), set: (val) => console.error('App.'+prop+' SET DEPRECATED!')})
+		);
 	}
 	var P = Object.assign(App.prototype, {constructor: App});
 	App.reDigit = /^(?:Numpad|Digit|btn-)([0-9])$/;
@@ -1175,7 +1133,6 @@ const App = (() => {
 			document.querySelector('.controls-main').classList.add('mode-' + mode);
 			this.mode = mode;
 		};
-		//P.clearHighlight = function() { return this.puzzle.clearHighlight(); };
 		P.select = function(cells) { return this.puzzle.select(cells); };
 		P.deselect = function(cells) { return this.puzzle.deselect(cells); };
 		P.smartSelectCell = function(cell) {
@@ -1382,7 +1339,7 @@ const App = (() => {
 			}
 		};
 		P.handleKeydown = function(event) {
-			console.info('App.handleKeydown:', event.type, event, event.target);
+			//console.info('App.handleKeydown:', event.type, event, event.target);
 			if(event.repeat) return;
 			if(App.reDigit.test(event.code)) {
 				this.doPressDigit(event.code.replace(App.reDigit, '$1'));
@@ -1411,12 +1368,8 @@ const App = (() => {
 				this.act({type: 'clear', arg: this.mode});
 			}
 			else if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
-				var selectedCells = this.puzzle.getSelectedCells();
-				var highlightedCells = this.highlightedCells;
-				console.log('highlightedCells:', highlightedCells);
-				console.log('selectedCells:', this.puzzle.cellsToString(this.puzzle.selectedCells));
+				var selectedCells = this.puzzle.selectedCells;
 				if(selectedCells.length > 0) {
-					//var highlightCell = this.highlightedCells[this.highlightedCells.length - 1];
 					var selectCell = selectedCells[selectedCells.length - 1];
 					var {row, col} = selectCell;
 					var cols = this.grid.cells.length, rows = this.grid.cells[row].length;
@@ -1427,15 +1380,8 @@ const App = (() => {
 						case 'ArrowDown': row = (row + rows + 1) % rows; break;
 					}
 					selectCell = this.grid.getCell(row, col);
-					if(!event.ctrlKey) {
-						this.deselect();
-						this.select(selectCell);
-						//this.act({type: 'select', arg: highlightCell});
-					}
-					else {
-						this.select(selectCell);
-						//this.act({type: 'select', arg: this.highlightedCells.concat(highlightCell)});
-					}
+					if(!event.ctrlKey) this.deselect();
+					this.select(selectCell);
 				}
 			}
 			else if(event.code === 'KeyZ' && event.ctrlKey) {
@@ -1500,6 +1446,8 @@ const App = (() => {
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
+	//document.head.querySelector('link[rel="shortcut icon"]').setAttribute('href', 'https://app.crackingthecryptic.com/favicon.ico');
+	document.head.querySelector('link[rel="shortcut icon"]').setAttribute('href', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAABXFBMVEX////aGk0daJs8fakaZpnhOmfcIVRFg67+/f5nmLvjRG7cI1XbHlDnaovkRnAuc6LhPGjdJ1g0d6Ynb6DgNmP7/P3++vvw9fj3zdhUjrQ5e6gjbZ4gap3qfZrfMmD2+fv+9vj98/XM3emxy92Ut9DztMTwnbNEgq1AgKswdaQqcqHob4/iQWveLl3n7/T87/Pj7PPd6PD75+zC1uS40OD40tyiwdWZutKCrMh/qcd8qMZtnr/xo7ddkrdOiLBIhrChh6iqep7mZYflVXviT3fiS3Tq8PX64uj63+bF2Oanxdn2yNT2xNGHpMHzrsBwn8Dyrb95lribl7Xuk6zukartj6jMiaZFeqaEgKVifKXuiaNveKHNgaBHc6B7dp5Sb53peZbnd5aOa5ReZJLcb5HpcJCiZ4+yZo2eYYukXojcYIW1WIHLWIC9T3rRR3LVQm3lPmrSPGnTM2LXMF5v7Cm9AAABh0lEQVQ4y72S51PCQBDFs5dLciQxjQBSBRGRZu+CdHvvvfde/v8ZwUkAB/KNcb/97r3budt9VJtrvpOQkUFrfUPQ9zI4tmhp8EPOi73uKSvdWYDzqAfHpxzNWihEkRUeUsfYzsmYGyGUa65R7y3rkQIIUkDI0zjGeZFtXLOHGwxKQBIgqYC6HezqsWO6D2E5467rRAHQeVG8Ha5S/zrycWfvpbzT1IfcXyqvQqnTPOiexa8sA+Uxg6ezTzroa6Te0hF+YRmRTRg4g0+fH1f/fquDZRRp1wDXJKKRrdlwNFBDupWBr8E/GBxLWiuDkDYn1UPLTYbLh6tv8Btgi/todGjO0ZxlfFO6MGhUwzS6FhPDptw/U9mGZ/+jdsd1EJXvFFB3glUy9xkN1TvyN5/VNAATISTswVolEZzMNQZGFPwSpCQVilvoN1MTWt9k46PGFihnOgVMJRT3Hhwbd1CDQ83BHEiwYpJ5Q26XZeyLAqgnaJqyqkgAkrmsb4KyrOXeYNdoN6HaWj9O3CwsngKXCwAAAABJRU5ErkJggg==');
 	var app = window.app = new App({});
 	// Plain: https://cracking-the-cryptic.web.app/sudoku/FLFpq4pMH3
 	var plainPuzzle = {
@@ -1741,7 +1689,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 	//puzzleId = 'TmMBJj8jbr';
 	//puzzleId = 'npM6B443HL';
-	puzzleId = 'hDNMJqPmTh';
+	puzzleId = 'qr6dDQJRpf';
 	console.log('puzzleId:', puzzleId);
 	
 	var urlQueryPuzzleId = new URLSearchParams(document.location.search).get('puzzleid');
