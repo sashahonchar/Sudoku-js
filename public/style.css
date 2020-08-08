@@ -237,6 +237,7 @@ html, body {
 .mode-corner [data-control="corner"],
 .mode-centre [data-control="centre"],
 .mode-colour [data-control="colour"],
+.mode-pen [data-control="pen"],
 .controls-input button
 {
 	color: #fff;
@@ -247,6 +248,7 @@ html, body {
 .mode-corner [data-control="corner"]:hover,
 .mode-centre [data-control="centre"]:hover,
 .mode-colour [data-control="colour"]:hover,
+.mode-colour [data-control="pen"]:hover,
 .controls-input button:hover
 { background-color: #7b1fa2; }
 

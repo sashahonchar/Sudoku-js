@@ -889,12 +889,13 @@ const App = (() => {
 	}
 	var P = Object.assign(App.prototype, {constructor: App});
 	App.reDigit = /^(?:Numpad|Digit|btn-)([0-9])$/;
-	App.Modes = ['normal', 'corner', 'centre', 'colour'];
+	App.Modes = ['normal', 'corner', 'centre', 'colour', 'pen'];
 	App.ModeToAction = {
 		'normal': 'value',
 		'corner': 'pencilmarks',
 		'centre': 'candidates',
 		'colour': 'colour',
+		'pen': 'pen',
 	};
 	App.colorHexToRGBA = (hex, alpha) => {
 		hex = parseInt(hex.replace(/^#/, ''), 16);
@@ -1167,7 +1168,7 @@ const App = (() => {
 		};
 		
 		P.handleCancel = function(event) {
-			console.info('App.handleCancel:', event.type, event, event.target);
+			//console.info('App.handleCancel:', event.type, event, event.target);
 			if(this.isDragging === false) this.clearHighlight();
 		};
 		P.handleDragStart = function(event) {
@@ -1239,8 +1240,9 @@ const App = (() => {
 				this.act({type: 'highlight', cells: 'none'});
 			}
 			else if(event.code === 'Space') {
+				var modes = App.Modes;
 				var mode = this.prevMode || this.mode;
-				var nextMode = App.Modes[(App.Modes.indexOf(mode) + (event.shiftKey ? 3 : 1)) % 4];
+				var nextMode = modes[(modes.indexOf(mode) + (event.shiftKey ? 3 : 1)) % modes.length];
 				this.changeMode(nextMode);
 			}
 			else if(['Backspace', 'Delete'].includes(event.key)) {
@@ -1503,12 +1505,76 @@ document.addEventListener('DOMContentLoaded', () => {
 			ctcId: 'J6Ln72n7JP',
 			replay: 'HL161f26272829313aT252HL32T18HL2032T7PM1T5HL030c15T24HL03T7HL030c15T21HL030cT22PM1T3HL32T14HL111a232c353e4750T37HL111a232c353e45464750T22HL111a232c353c3e4546474e50T19HL4fT8VL2T6HL38T44HL3637T9PM2T4HL040d161f28313a43T60HL040c0d0e0f1011161f28313a43T29HL3aT26HL3bT20HL2425262728292aT98HL1b2425262728292aT23HL1b1d2425262728292aT7HL1cT29HL1c2dT9PM3T5HL2aT69HL3e47T11PM3T4HL32T104HL1732T8HL172032T6HL20T8HL2032T7CD1T6CD3T2PM1T19HL030cT58HL0cT15VL3T21HL03T5VL1T1HL0708T49PM3T10PM3T52HL07T8VL3T1HL28T116HL15T106VL2T3HL0bT48HL02T9HL0001T21PM2T10HL39424bT68CD7T23CD8T1CD9T1HL3aT20HL39T8CD9T11HL42T7CD7T4HL4cT80HL4dT58HL3b444dT17CD4T31CD5T1CD6T2HL3bT42CD4T18HL4dT10CD4T3HL44T5VL4T2HL3aT174HL2d2e2f30T311HL3f4041424344T62HL373f4041424344T31HL373f404142434448494aT42HL38T9HL3638T7PM4T14HL232c333435T155HL212223T106HL2b2cT15PM5T15HL34T69HL222bT19HL34T6HL2234T11HL22T12VL6T3HL3e47T37PM6T7HL2b2cT98HL232cT20PM7T17HL2b34T262HL10192b34T22CD1T29CD3T14CD3T8CD4T6CD5T12CD8T32HL19T22HL10T8HL19T59HL10T44HL2bT24HL34T19CD4T25CD5T14HL2bT38CD1T7HL040d16T123CD4T58CD5T1CD6T2HL16T38HL04T11VL6T15HL0d16T11CD6T3HL1f2831T50CD7T37CD8T2CD9T1HL29T108VL2T26HL232a2b2c35T79HL33T15HL2133T7PM2T11HL050e17T219CD7T36CD8T1CD9T1HL20T19HL0eT6CD7T21HL1aT401HL081aT11HL06081aT8CD1T17CD4T9CD5T4CD8T18CD9T0HL19T40HL06T7CD1T3HL08T4CD1T2HL1aT40HL08T87CD4T22HL1aT7CD4T2HL38T173HL36T20HL30T18HL304450T4HL30T22HL32333435T28HL323334T13HL232c32333435T10HL2bT53HL212bT8PM4T28HL3e47T101CD3T79CD6T1PM3T7PM6T1HL3c454fT30HL3c454eT40CD1T21CD5T33CD8T19HL3cT20CD1T10HL454eT45HL45T7CD1T5HL4eT5VL1T1HL3cT28HL3c45T10HL3cT20HL45T71HL3cT5VL8T9HL45T12VL5T4HL3aT88HL39T7VL7T17HL4bT12CD7T14HL28T27CD7T2HL0bT159HL0aT12HL091213T31HL13T20HL0912T8PM1T5HL4049T38HL40T13VL1T6HL49T10HL4aT363HL4849T38PM7T28HL31T172CD8T21HL494a4b4c4d4e4fT178HL43T17HL38T7HL3637T12HL242526272829T100HL1c242526272829T39HL1c2425262728292e2fT33HL12131415T42HL0a12131415T10HL020a12131415T6HL0001T87HL1dT15VL2T10HL06T86HL30313233T32HL16T223HL1eT8HL0dT6VL4T16HL16T5VL5T2HL06T16CD4T17HL21T11VL4T14HL2bT6CD4T7PM4T7HL33T42HL06T42CD8T14HL33T16VL9T39HL06T18VL5T7HL08T18CD5T7HL1aT6CD5T3HL1019T9CD5T5HL090aT81HL09T20VL5T3HL12T11VL1T9HL10T26HL191aT17CD1T5HL10T7VL1T3HL19T41VL4T17HL0001T131CD2T24CD4T2PM4T21PM4T10PM2T16HL38T85HL384aT48PM5T24HL41T36HL02T155VL7T12HL0bT18HL0a0bT159CD6T59CD8T6CD9T1HL0aT32HL0bT13CD6T11HL0aT13VL6T2HL13T16CD8T29CD9T1HL05T173CD7T13HL17T8VL7T1HL38414aT149CD4T41CD5T7CD8T24CD9T0HL39T25HL38T13HL41T9CD4T13CD5T26HL38T10CD8T16CD9T1HL41T17HL4aT3HL41T10HL4aT7CD4T28HL38T81VL4T41HL4aT8VL5T3HL36T18PM5T15PM5T30PM4T14HL38T66HL25T23HL1b1cT10HL242dT8PM4T16HL00T12VL2T6HL01T5VL4T6HL36T65PM2T3HL37T4VL2T2HL232c35T294CD1T29CD5T52CD7T33HL34T558HL3dT21HL34T6HL2b34T94CLT2CD5T53CD7T38CD8T10CD7T6UDT294UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT4UDT3UDT3UDT3UDT3UDT3UDT6UDT3UDT3UDT3UDT2UDT3UDT2UDT3UDT2UDT3UDT2UDT3UDT3UDT2UDT3UDT3UDT3UDT2UDT15UDT3UDT3UDT2UDT3UDT3UDT2UDT2UDT3UDT3UDT3UDT2UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT7UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT3UDT36UDT25UDT20HL33T97CLT37HL06T9CLT2HL0633T15CD2T18CD9T50HL34T41HL3dT13HL33T10HL06T71HL11T11HL06T8VL9T12HL33T20VL2T5HL05T41CD9T16HL17T9CD9T1HL0eT6VL9T1HL1fT45CD9T3HL08T43CD9T3HL1aT11CD9T2HL10T103CD4T20HL19T8CD5T5HL1aT20CD5T2HL19T176VL4T66HL1aT12HL10T137CD8T140HL1aT20HL081aT10PM8T6HL17T29HL0517T8PM8T8HL2b34T76PM8T7HL35T199HL34T119HL35T63HL000102T149HL0aT12HL0001T223CD2T14CD4T1PM2T7HLT32HL02T14CD5T30CD7T8CD8T1HL05T94HL0508T10HL05081aT33HL0508171aT8PM8T15HL3637T51HL00013637T15HL49T281HL41T250CD8T71CD9T1HL40T53HL3fT3CD3T26CD6T1HL0bT132CD5T89CD8T13HL090aT50CD1T18CD2T9CD2T16CD5T42CD6T1CD8T22HL13T28HL0aT5CD1T3CD5T30HL2eT107HL010a131c252e2fT121HL38T25HL4aT74HL384aT14HL38T57HL4aT40HL38T12HL02T21VL7T73HL05T15VL8T12HL17T9VL7T2HL08T20VL5T20HL10T8VL1T3HL1aT7VL8T11HL2bT28VL5T15HL34T11VL8T31HL2cT66HL35T27VL1T3HL232cT58CLT6HL2cT123VL7T11HL23T7VL9T1HL09T216CD1T9PM1T6HL12T5VL1T2HL13T46VL9T69HL414aT90PM9T21HL2dT93VL9T3HL32T32VL3T14HL20T13VL1T2HL32T43HL31T8VL7T12HL1fT27VL8T2HL28T8VL9T2HL2425T65CD4T50CD8T46HL1cT12HL1c1bT8HL1b1cT40CD3T0CD7T44HL1cT21PM3T6HL1bT8VL7T13HL1cT10VL3T3HL25T80HL010a131c252eT19HL2eT17HL2425T14HL36T44HL39T15HL38T6VL4T3HL36T24PM4T9HL4aT112CD5T26CD8T3CD9T4HL16T162HL0bT8VL8T15HL0aT10VL6T19HL09T15VL5T11HL41T33VL9T10HL4aT5VL5T21HL42T14VL8T5HL4bT6VL9T3HL4dT24VL6T21HL3bT7VL5T1HL25T68VL8T16HL24T15VL4T1HL3fT80HL4849T38CD7T57CD8T1HL49T30VL7T2HL48T6VL8T3HL3637T141CD2T30CD3T8CD6T23PM2T25HL37T12HL36T18CD6T16HL37T30CD3T20HL00T93VL2T3HL01T5VL4T8HL36T21VL3T3HL3fT13VL6T10HL37T15VL2T7HL47T20VL3T17HL3eT14VL6T7HLT213',
 		},
+		'npM6B443HL': {
+			ctcId: 'npM6B443HL',
+		},
 	};
 	app.testPuzzles = testPuzzles;
 	
+	var alphaPuzzles = {
+		'hDNMJqPmTh': {
+			ctcId: 'hDNMJqPmTh',
+			appUrl: 'https://app.crackingthecryptic.com/sudoku/hDNMJqPmTh',
+			name: 'Araf Sudoku',
+			setter: 'Phistomefel',
+			rules: 'Normal sudoku rules apply. The grid must be decomposed into different areas. Each cell belongs to exactly one area. Each area contains exactly two clues. The sum of all digits in an area lies between the two clues, but may not reach them. For example, if the clues for an area are 21 and 24, the sum of the digits in the area is 22 or 23. Digits may not repeat within an area.',
+			videoId: 'M3oVi4cBRxE',
+			videoUrl: 'https://www.youtube.com/watch?v=M3oVi4cBRxE',
+			videoHost: 'Simon',
+			notes: 'Alpha testing, game 1. Needs a lot of colouring.'
+		},
+		'BLLGjtrb4P': {
+			ctcId: 'BLLGjtrb4P',
+			appUrl: 'https://app.crackingthecryptic.com/sudoku/BLLGjtrb4P',
+			name: '16 Cups Of Tea',
+			setter: 'Sumanta Mukherjee',
+			rules: 'Normal sudoku rules apply.  In cages, digits must sum to the small clue given in the top left corner of the cage.  Digits cannot repeat in a cage.  Clues outside the grid give the sum of cells along the indicated diagonal.  Inequality signs in the grid point to the lower of the two cells involved.',
+			videoId: 'dDdd8iBQMQk',
+			videoUrl: 'https://www.youtube.com/watch?v=dDdd8iBQMQk',
+			videoHost: 'Simon',
+			notes: 'Alpha testing, game 2. Little killer/killer hybrid.'
+		},
+		'qr6dDQJRpf': {
+			ctcId: 'qr6dDQJRpf',
+			appUrl: 'https://app.crackingthecryptic.com/sudoku/qr6dDQJRpf',
+			name: 'Battlefield Sudoku',
+			setter: 'Big Tiger',
+			rules: 'Normal sudoku rules apply. Consider the first X cells and the last Y cells of a row or column where X is the number in the first cell and Y is the number in the last cell. A clue outside the grid gives the sum of the digits where these groups overlap, or the sum of the digits in the gap between the groups if they don\'t overlap.',
+			videoId: 'qRMqYWqUnPc',
+			videoUrl: 'https://www.youtube.com/watch?v=qRMqYWqUnPc',
+			videoHost: 'Simon',
+			notes: 'Alpha testing, game 3. lots outside the grid.'
+		},
+		'TmMBJj8jbr': {
+			ctcId: 'TmMBJj8jbr',
+			appUrl: 'https://app.crackingthecryptic.com/sudoku/TmMBJj8jbr',
+			name: 'C.T.C.',
+			setter: 'Prasanna Seshadri',
+			rules: `Normal killer sudoku rules apply (cells in cages must sum to the total given in the top left of each cage). Cage totals have been coded Each letter represents a unique digit. Even numbers within the cages are shaded.`,
+			videoId: '0JMmSxhyfIo',
+			videoUrl: 'https://www.youtube.com/watch?v=0JMmSxhyfIo',
+			videoHost: 'Simon',
+			notes: 'Alpha testing, game 4. Prasanna’s 14 rules!'
+		},
+		'j2gtNR4Mg4': {
+			ctcId: 'j2gtNR4Mg4',
+			appUrl: 'https://app.crackingthecryptic.com/sudoku/j2gtNR4Mg4',
+			name: 'Partial Coded Killer',
+			setter: 'Scott Strosahl',
+			rules: 'Normal sudoku rules apply. Consider the first X cells and the last Y cells of a row or column where X is the number in the first cell and Y is the number in the last cell. A clue outside the grid gives the sum of the digits where these groups overlap, or the sum of the digits in the gap between the groups if they don\'t overlap.',
+			videoId: 'jayJVjqAS3k',
+			videoUrl: 'https://www.youtube.com/watch?v=jayJVjqAS3k',
+			videoHost: 'Simon',
+			notes: 'Alpha testing, game 5. Scott Strosahl’s partial coded killer'
+		},
+	};
+	app.alphaPuzzles = alphaPuzzles;
+	
 	var puzzleId;
 	
-	puzzleId = 'TmMBJj8jbr';
+	//puzzleId = 'TmMBJj8jbr';
+	//puzzleId = 'npM6B443HL';
+	puzzleId = 'hDNMJqPmTh';
 	console.log('puzzleId:', puzzleId);
 	
 	var urlQueryPuzzleId = new URLSearchParams(document.location.search).get('puzzleid');
