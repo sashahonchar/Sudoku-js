@@ -566,7 +566,7 @@ const Puzzle = (() => {
 		ud: 'redo',
 		rd: 'undo',
 	};
-	Puzzle.Modes = ['normal', 'corner', 'centre', 'colour', 'pen'];
+	Puzzle.Modes = ['normal', 'corner', 'centre', 'colour'];//, 'pen'];
 	Puzzle.parseRCVal = function(rcv) {
 		var [_, r, c, val] = Puzzle.reRCVal.exec(rcv);
 		return [r, c, val];
@@ -699,25 +699,6 @@ const Puzzle = (() => {
 			cells = cells.map(cell => cell.toRC()).join('');
 			return cells || '-';
 		};
-		P.actionToString = function(action) {
-			if(typeof action === 'string') return action;
-			const type = Puzzle.ActionLongToShort[action.type] || '-';
-			var arg = '-';
-			switch(type) {
-				case 'hl':
-				case 'sl':
-				case 'ds':
-					arg = this.cellsToString(action.arg);
-					break;
-				case 'cl': 
-					console.warn('actionToString CLEAR:', action, type, action.arg, Puzzle.Modes, Puzzle.Modes.indexOf(action.arg));
-					arg = Puzzle.Modes.indexOf(action.arg);
-					break;
-				default:
-					if(action.arg !== undefined) arg = action.arg;
-			}
-			return type + (arg !== '-' ? ':' + arg : '');
-		};
 		P.parseCells = function(cells) {
 			//console.info('Puzzle.parseCells(cells);', cells);
 			if(['none', '-', ''].includes(cells)) cells = [];
@@ -731,6 +712,23 @@ const Puzzle = (() => {
 			if(!Array.isArray(cells)) cells = [cells];
 			if(cells === this.selectedCells) cells = [...cells];
 			return cells;
+		};
+		P.actionToString = function(action) {
+			if(typeof action === 'string') return action;
+			const type = Puzzle.ActionLongToShort[action.type] || '-';
+			var arg = '-';
+			switch(type) {
+				case 'hl':
+				case 'sl':
+				case 'ds':
+					arg = this.cellsToString(action.arg); break;
+				case 'cl': 
+					//console.warn('actionToString CLEAR:', action, type, action.arg, Puzzle.Modes, Puzzle.Modes.indexOf(action.arg));
+					arg = Puzzle.Modes.indexOf(action.arg); break;
+				default:
+					if(action.arg !== undefined) arg = action.arg;
+			}
+			return type + (arg !== '-' ? ':' + arg : '');
 		};
 		P.parseAction = function(action) {
 			//console.info('Puzzle.parseAction(action);', action);
@@ -831,21 +829,25 @@ const Puzzle = (() => {
 			*/
 			if(action === 'ud' || action.type === 'undo') {
 				if(this.undoStack.length > 0) {
-					//console.log('PRE UNDO:', this.undoStack.join(', '));
 					this.logReplayAct(act);
-					var undoAct = this.undoStack.pop();
-					this.redoStack.push(undoAct);
+					//this.redoStack.push(this.undoStack.pop());
+					do {
+						var undoAct = this.undoStack.pop();
+						this.redoStack.push(undoAct);
+					} while(this.undoStack.length > 0 && ['sl', 'ds'].includes(Replay.parseActA(undoAct)[0]));
 					this.clearPuzzle();
-					//console.log('  POST UNDO:', this.undoStack.join(', '));
 					this.undoStack.forEach(act => this.exec(act));
 				}
 			}
 			else if(action === 'rd' || action.type === 'redo') {
 				if(this.redoStack.length > 0) {
 					this.logReplayAct(act);
-					var redoAct = this.redoStack.pop();
-					this.undoStack.push(redoAct);
-					this.exec(redoAct);
+					//var redoAct = this.redoStack.pop(); this.undoStack.push(redoAct); this.exec(redoAct);
+					do {
+						var redoAct = this.redoStack.pop();
+						this.undoStack.push(redoAct);
+						this.exec(redoAct);
+					} while(this.redoStack.length > 0 && ['sl', 'ds'].includes(Replay.parseActA(redoAct)[0]));
 				}
 			}
 			else {
@@ -1136,7 +1138,7 @@ const App = (() => {
 		P.select = function(cells) { return this.puzzle.select(cells); };
 		P.deselect = function(cells) { return this.puzzle.deselect(cells); };
 		P.smartSelectCell = function(cell) {
-			//console.info('App.smartSelectCell(cell);');
+			//console.info('App.smartSelectCell(cell);', cell, this.mode);
 			const makeSelector = (cell, type) => {
 				if(Array.isArray(type)) return type.reduce((acc, cur) => acc || makeSelector(cell, cur), undefined); 
 				var selFn, selVal;
@@ -1151,14 +1153,14 @@ const App = (() => {
 			var cells = [], selector;
 			switch(this.mode) {
 				case 'normal': selector = makeSelector(cell, ['normal', 'colour', 'centre', 'corner']); break;
-				case 'corner': selector = makeSelector(cell, ['normal', 'corner', 'colour', 'centre']); break;
-				case 'centre': selector = makeSelector(cell, ['normal', 'centre', 'colour', 'corner']); break;
+				case 'corner': selector = makeSelector(cell, ['normal', 'corner', 'centre', 'colour']); break;
+				case 'centre': selector = makeSelector(cell, ['normal', 'centre', 'corner', 'colour']); break;
 				case 'colour': selector = makeSelector(cell, ['colour', 'normal', 'centre', 'corner']); break;
 			}
 			if(selector !== undefined) cells = this.grid.getCellList().filter(selector);
 			if(cells.length > 0) {
-				this.highlightedCells.length = 0;
-				//this.act({type: 'select', arg: cells});
+				this.deselect();
+				this.select(cells);
 			}
 		};
 	// Test Dot Puzzle
@@ -1280,7 +1282,7 @@ const App = (() => {
 		};
 		
 		P.handleCancel = function(event) {
-			console.info('App.handleCancel:', event.type, event, event.target);
+			//console.info('App.handleCancel:', event.type, event, event.target);
 			if(this.isDragging === false) this.deselect();
 		};
 		P.handleDragStart = function(event) {
