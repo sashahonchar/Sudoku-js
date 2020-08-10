@@ -15,6 +15,10 @@
         "destination": "/sudoku.html"
       },
       {
+        "source": "/knownissues",
+        "destination": "/knownissues.html"
+      },
+      {
         "source": "/",
         "destination": "/index.html"
       }

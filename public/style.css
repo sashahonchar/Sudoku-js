@@ -27,17 +27,21 @@ html, body {
 	margin: 0 auto;
 	padding: 0 2em;
 	line-height: 50px;
-	font-size: 24px;
+	font-size: 20px;
 	color: #fff;
 }
-.menu a, .menu a:visited {
-	color: #fff;
+.menu a {
+	margin-right: 1em;
 	text-decoration: none;
 }
+.menu a, .menu a:visited { color: #fff; }
+.menu a:hover { text-decoration: underline; }
+#page-home .menu-home,
+#page-knownissues .menu-knownissues
+	{ color: #ccc; }
 .menu-logo {
 	display: block;
 	float: left;
-	margin-right: 20px;
 	width: 132px; height: 50px;
 	font-size: 15px;
 	line-height: 25px;

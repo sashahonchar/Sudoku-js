@@ -4,6 +4,7 @@
   "description": "Sudoku Web App for Cracking The Cryptic",
   "main": "/public/index.js",
   "scripts": {
+    "serve": "firebase serve",
     "import": "cd public && node ../scripts/export_codepen.js",
     "deploy": "firebase deploy --only hosting",
     "deploy-funcitons": "firebase deploy --only functions"
