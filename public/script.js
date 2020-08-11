@@ -278,7 +278,7 @@ const Grid = (() => {
 		return (this.cells[r] || [])[c];
 	};
 	P.elemToCell = function(elem) {
-		if(typeof elem.getAttribute !== 'function') return undefined;
+		if(!elem || typeof elem.getAttribute !== 'function') return undefined;
 		var row = elem.getAttribute('row'), col = elem.getAttribute('col');
 		return this.getCell(row, col);
 	};
@@ -1099,11 +1099,10 @@ const App = (() => {
 					cells: cage.cells.map(([r, c]) => `r${1 + r}c${1 + c}`).join(','),
 					style: 'killer',
 				};
-				if(cage.value !== undefined && cage.value !== '') {
+				if(cage.value !== undefined && !/^\s*$/.test(cage.value)) {
 					outCage.cageValue = `r${1 + labelCell[0]}c${1 + labelCell[1]}: ${cage.value}`;
 					if(!isNaN(cage.value)) outCage.sum = parseInt(cage.value);
 				}
-				//console.log('cage:', cage, outCage);
 				cages.push(outCage);
 			});
 			return {givens, cages};
@@ -1207,7 +1206,7 @@ const App = (() => {
 				document.addEventListener('keydown', this.handleKeydown, {useCapture: true});
 				document.addEventListener('keyup', this.handleKeyup, {useCapture: true});
 			// Outside
-				window.addEventListener('blur', this.handleCancel);
+				//window.addEventListener('blur', this.handleCancel);
 				document.addEventListener('touchcancel', this.handleCancel);
 			// Buttons
 				document.querySelectorAll('button')
@@ -1309,7 +1308,7 @@ const App = (() => {
 			}
 		};
 		P.handleDragEnd = function(event) {
-			//console.info('App.handleDragEnd(event);');
+			//console.info('App.handleDragEnd(event);', event);
 			this.isDragging = false;
 			if(this.highlighting !== undefined) {
 				var nextHighlightedCells = this.grid.getCellList().filter(cell => cell.hasState('highlight'));
@@ -1626,6 +1625,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		'npM6B443HL': {
 			ctcId: 'npM6B443HL',
 		},
+		'RRf6bgb9GG': {
+			ctcId: 'RRf6bgb9GG',
+			videoId: 'qs0soH_UFNE',
+			notes: 'First use of legacy web app'
+		},
 	};
 	app.testPuzzles = testPuzzles;
 	
@@ -1693,6 +1697,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	//puzzleId = 'TmMBJj8jbr';
 	//puzzleId = 'npM6B443HL';
 	//puzzleId = 'qr6dDQJRpf';
+	//puzzleId = 'bjg7pJqn9L';
 	console.log('puzzleId:', puzzleId);
 	
 	var urlQueryPuzzleId = new URLSearchParams(document.location.search).get('puzzleid');

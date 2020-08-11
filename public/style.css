@@ -155,6 +155,14 @@ html, body {
 .colour-9 { background-color: rgba(52, 187, 230, 0.5); }
 .colour-0 { background-color: rgba(95, 95, 95, 0.5); }
 
+@keyframes bounce {
+  0% { transform: scale(1); opacity: 0; }
+  50% { transform: scale(0.75); opacity: .7; }
+  80% { transform: scale(0.95); opacity: 1; }
+  90% { transform: scale(0.85) }
+  100% { transform: scale(1) }
+}
+
 .highlight:before {
 	display: block;
 	z-index: 4;
@@ -162,6 +170,7 @@ html, body {
 	position: absolute;
 	content: "";
 	background-color: rgba(255, 215, 0, 0.5);
+  animation: bounce .25s 0s;
 }
 .cell:after {
 	display: block;
