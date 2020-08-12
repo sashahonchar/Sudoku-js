@@ -180,8 +180,14 @@ const Cell = (() => {
 			if(this.colour !== undefined) this.elem.classList.add('colour-' + this.colour);
 		};
 		P.toggleColour = function(colour) {
-			this.colour = colour;
-			this.showColour();
+			if(colour === this.colour) {
+				this.colour = undefined;
+				this.hideColour();
+			}
+			else {
+				this.colour = colour;
+				this.showColour();
+			}
 		};
 	// Helpers
 		P.toRC = function() {
