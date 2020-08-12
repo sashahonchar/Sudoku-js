@@ -7,7 +7,9 @@
     "serve": "firebase serve",
     "import": "cd public && node ../scripts/export_codepen.js",
     "deploy": "firebase deploy --only hosting",
-    "deploy-funcitons": "firebase deploy --only functions"
+    "deploy-functions": "firebase deploy --only functions",
+    "deploy-firestore": "firebase deploy --only firestore",
+    "testdb": "env GOOGLE_APPLICATION_CREDENTIALS='/mnt/c/dropbox/Projects/CTC App/admin/CTC App-7ad3a2689c92.json' node ./scripts/testdb.js"
   },
   "repository": {
     "type": "git",
@@ -20,6 +22,8 @@
   },
   "homepage": "https://github.com/killroy42/ctcapp#readme",
   "dependencies": {
+    "firebase": "^7.17.2",
+    "firebase-admin": "^9.0.0",
     "node-fetch": "^2.6.0"
   }
 }

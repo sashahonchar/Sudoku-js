@@ -1,0 +1,40 @@
+<html>
+	<head>
+	</head>
+	<body>
+		<script src="/__/firebase/7.17.2/firebase-app.js"></script>
+		<script src="/__/firebase/7.17.2/firebase-auth.js"></script>
+		<script src="/__/firebase/7.17.2/firebase-firestore.js"></script>
+		<script src="/__/firebase/init.js"></script>
+		<script>
+			console.time('test');
+			firebase.auth().signInAnonymously()
+				.then(user => {
+					console.log('user:', user);
+					const db = firebase.firestore();
+
+					window.user = user;
+					window.db = db;
+
+					//db.collection('puzzles').get().then(res => res.docs).then(res => console.log(res))
+
+					const getPuzzleReplays = puzzleId => Promise.resolve()
+						.then(() => db.collection(`puzzles/${puzzleId}/replays`).get())
+						.then(replaysSnap => replaysSnap.docs.map(doc => doc.data()));
+
+					const getPuzzle = id => Promise.all([
+							db.collection('puzzles').doc(id).get().then(snap => snap.data()),
+							getPuzzleReplays(id)
+						])
+						.then(([puzzle, replays]) => ({puzzle: puzzle, replays}));
+
+					getPuzzle('7FTq4BpLhf')
+						.then(puzzle => {
+							console.log('puzzle:', puzzle);
+						});
+
+				})
+				.then(() => console.timeEnd('test'));
+		</script>
+	</body>
+</html>

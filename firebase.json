@@ -6,22 +6,12 @@
     "public": "public",
     "ignore": [
       "firebase.json",
+      "database-rules.json",
+      "storage.rules",
+      "functions",
+      "scripts",
       "**/.*",
       "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "/sudoku/**",
-        "destination": "/sudoku.html"
-      },
-      {
-        "source": "/knownissues",
-        "destination": "/knownissues.html"
-      },
-      {
-        "source": "/",
-        "destination": "/index.html"
-      }
     ],
     "headers": [
       {
@@ -33,6 +23,28 @@
           }
         ]
       }
+    ],
+    "rewrites": [
+      {
+        "source": "/sudoku/**",
+        "destination": "/sudoku.html"
+      },
+      {
+        "source": "/knownissues",
+        "destination": "/knownissues.html"
+      },
+      {
+        "source": "/testdb",
+        "destination": "/testdb.html"
+      },
+      {
+        "source": "/",
+        "destination": "/index.html"
+      }
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   }
 }
