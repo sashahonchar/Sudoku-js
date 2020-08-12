@@ -64,27 +64,40 @@ const Cell = (() => {
 	P.hasState = function(state) {
 		return this.elem.classList.contains(state);
 	};
+	P.clearValue = function() {
+		if(this.value === undefined) return false;
+		this.clearChildElem('cell-value');
+		this.value = undefined;
+		this.showCandidates();
+		this.showPencilMarks();
+		return true;
+	};
+	P.clearPencilMarks = function() {
+		if(this.pencilMarks.length === 0) return false;
+		this.hidePencilMarks();
+		this.pencilMarks.length = 0;
+		return true;
+	};
+	P.clearCandidates = function() {
+		if(this.candidates.length === 0) return false;
+		this.hideCandidates();
+		this.candidates.length = 0;
+		return true;
+	};
+	P.clearColour = function() {
+		if(this.colour === undefined) return false;
+		this.colour = undefined;
+		this.hideColour();
+		return true;
+	};
 	P.clear = function({levels = 0, mode = 'normal'} = {}) {
 		//console.info('Cell.clear({levels = %s, mode = %s});', levels, mode);
-		if(mode === 'colour' && this.colour !== undefined) {
-			this.colour = undefined;
-			this.hideColour();
-		}
-		else if(this.value !== undefined) {
-			this.clearChildElem('cell-value');
-			this.value = undefined;
-			this.showCandidates();
-			this.showPencilMarks();
-		}
-		else if(this.candidates.length > 0 || this.pencilMarks.length > 0) {
-			this.hideCandidates();
-			this.candidates.length = 0;
-			this.hidePencilMarks();
-			this.pencilMarks.length = 0;
-		}
-		else {
-			this.colour = undefined;
-			this.hideColour();
+		switch(mode) {
+			case 'normal': case 'corner': this.clearValue() || this.clearPencilMarks() || this.clearCandidates() || this.clearColour(); break;
+			case 'centre': this.clearValue() || this.clearCandidates() || this.clearPencilMarks() || this.clearColour(); break;
+			case 'colour': this.clearColour() || this.clearValue() || this.clearPencilMarks() || this.clearCandidates(); break;
+			case 'all': this.clearValue() && this.clearPencilMarks() && this.clearCandidates() && this.clearColour(); break;
+			default: console.error('Cell.clear > Invalid mode:', mode);
 		}
 		if(levels > 1) return this.clear({levels: levels - 1});
 		return this;
@@ -508,10 +521,10 @@ const Replay = (() => {
 			return res;
 		};
 	};
-	const replayA2B = Replay.replayA2B = (replay, w = 9) => replay.match(reActA).map(actA2B(w)).join('');
-	const replayB2A = Replay.replayB2A = (replay, w = 9) => replay.match(reActB).map(actB2A(w)).join(',');
-	const replayA2C = Replay.replayA2C = (replay, w = 9) => replay.match(reActA).map(actA2C(w)).join('');
-	const replayC2A = Replay.replayC2A = (replay, w = 9) => replay.match(reActC).map(actC2A(w)).join(',');
+	const replayA2B = Replay.replayA2B = (replay, w = 9) => (replay.match(reActA) || []).map(actA2B(w)).join('');
+	const replayB2A = Replay.replayB2A = (replay, w = 9) => (replay.match(reActB) || []).map(actB2A(w)).join(',');
+	const replayA2C = Replay.replayA2C = (replay, w = 9) => (replay.match(reActA) || []).map(actA2C(w)).join('');
+	const replayC2A = Replay.replayC2A = (replay, w = 9) => (replay.match(reActC) || []).map(actC2A(w)).join(',');
 	return Replay;
 })();
 
@@ -542,6 +555,7 @@ const Puzzle = (() => {
 	Puzzle.reRCRange = /^r([0-9]+)c([0-9]+)(?:-r([0-9]+)c([0-9]+))?$/;
 	Puzzle.reRCVal = /^r([0-9]+)c([0-9]+)(?:\s*[:=]\s*([a-zA-Z0-9]+))?$/;
 	Puzzle.reRCSplit = /(?=r[0-9]+c[0-9]+)/;
+	Puzzle.reIsSelection = /^(sl|ds|hl|select|deselect|highlight)$/i;
 	Puzzle.ActionLongToShort = {
 		highlight: 'sl',
 		select: 'sl',
@@ -572,6 +586,7 @@ const Puzzle = (() => {
 		return [r, c, val];
 	};
 	Puzzle.logTimeResolutionMs = 50;
+	Puzzle.isSelection = actType => Puzzle.reIsSelection.test(actType);
 	// Cells
 		P.getCells = function(query) {
 			var segments = query === '' ? [] : query.split(/\s*,\s*/);
@@ -657,6 +672,7 @@ const Puzzle = (() => {
 			this.loadPuzzle(puzzle);
 		};
 		P.loadRemoteCTCPuzzle = function(puzzleId) {
+			console.info('Puzzle.loadRemoteCTCPuzzle("%s");', puzzleId);
 			this.puzzleId = puzzleId;
 			return Promise.resolve()
 				.then(() => this.puzzleCache[puzzleId]
@@ -806,28 +822,10 @@ const Puzzle = (() => {
 			action = this.parseAction(action);
 			var act = this.actionToString(action);
 			//console.info('Puzzle.act("%s");', act, action);
-			/*
-			if(!/^(highlight|select|deselect|undo|redo|hl|sl|ds|ud|rd)$/.test(action.type)) {
-				console.warn('Messing with highlight:', action);
-				var nextSelectedCells = this.cells.filter(cell => cell.hasState('highlight'));
-				var prevSelection = this.cellsToString(this.selectedCells);
-				var nextSelection = this.cellsToString(nextSelectedCells);
-				console.log('  prevSelection:', prevSelection);
-				console.log('  nextSelection:', nextSelection);
-				if(prevSelection !== nextSelection) {
-					//console.warn('Squeeze highlight in before action:', action);
-					// Squeeze highlight in before action
-					var selAction = {type: 'select', cells: nextSelectedCells};
-					var selAct = this.actionToString(selAction);
-					if(this.exec(selAction)) {
-						this.logReplayAct(selAct);
-						this.redoStack.length = 0;
-						this.undoStack.push(selAct);
-					}
-				}
+			if(this.errorsVisible && !Puzzle.isSelection(action.type)) {
+				this.cells.forEach(cell => cell.error(false));
 			}
-			*/
-			if(action === 'ud' || action.type === 'undo') {
+			if(action.type === 'undo') {
 				if(this.undoStack.length > 0) {
 					this.logReplayAct(act);
 					//this.redoStack.push(this.undoStack.pop());
@@ -839,7 +837,7 @@ const Puzzle = (() => {
 					this.undoStack.forEach(act => this.exec(act));
 				}
 			}
-			else if(action === 'rd' || action.type === 'redo') {
+			else if(action.type === 'redo') {
 				if(this.redoStack.length > 0) {
 					this.logReplayAct(act);
 					//var redoAct = this.redoStack.pop(); this.undoStack.push(redoAct); this.exec(redoAct);
@@ -961,6 +959,7 @@ const Puzzle = (() => {
 				});
 				Object.values(cellErrors || {}).forEach(({cell, errors}) => {
 					cell.error(true);
+					this.errorsVisible = true;
 					console.info('%s errors in cell[%s]:', errors.length, cell.toRC(), ...errors);
 				});
 				setTimeout(() => alert('That doesn\'t look right!'), 10);
@@ -1190,9 +1189,24 @@ const App = (() => {
 				].map(([r, c], idx) => `${idx === 0 ? 'M' : 'L'}${64 * c} ${64 * r}`).join(' '));
 			}
 		};
+	// Replay
+		P.getReplay = function() {
+			return JSON.stringify({
+				puzzleId: this.puzzle.puzzleId,
+				data: Replay.replayA2C(this.puzzle.replayStack.join(','))
+			});
+		};
+		P.loadReplay = function(replay, opts) {
+			if(typeof replay === 'string') replay = JSON.parse(replay);
+			console.log('replay:', replay);
+			console.log('replay.puzzleId:', replay.puzzleId);
+			return Promise.resolve()
+				.then(() => replay.puzzleId !== this.puzzle.puzzleId ? this.loadRemoteCTCPuzzle(replay.puzzleId) : null)
+				.then(() => this.puzzle.replayPlay({actions: Replay.replayC2A(replay.data).split(',')}, opts));
+		};
 	// Event Handlers
 		P.attachHandlers = function() {
-			window.addEventListener('focus', event => console.warn('window.on(focus)'), {useCapture: true});
+			//window.addEventListener('focus', event => console.warn('window.on(focus)'), {useCapture: true});
 			
 				//document.querySelector('.grid').addEventListener('
 			// input
