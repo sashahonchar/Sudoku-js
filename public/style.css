@@ -227,6 +227,42 @@ html, body {
 	transform-origin: middle center;
 	margin-right: 2rem;
 }
+.puzzle-header {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	height: 4rem;
+	width: 20rem;
+	margin: 0 0rem;
+	display: none;
+}
+.puzzle-header .header-left, .puzzle-header .header-right {
+	position: absolute;
+	z-index: 0;
+}
+.puzzle-header .header-right { right: 0; }
+.puzzle-title, .puzzle-author {
+	text-align: center;
+	line-height: 2rem;
+	font-size: 1.5rem;
+	font-weight: 600;
+	margin: 0 2rem;
+	text-shadow:
+		-1px -1px 2px rgba(255,255,255,0.5), 0px -1px 2px rgba(255,255,255,0.5), 1px -1px 2px rgba(255,255,255,0.5),
+		-1px  0px 2px rgba(255,255,255,0.5), 0px  0px 2px rgba(255,255,255,0.5), 1px  0px 2px rgba(255,255,255,0.5),
+		-1px  1px 2px rgba(255,255,255,0.5), 0px  1px 2px rgba(255,255,255,0.5), 1px  1px 2px rgba(255,255,255,0.5);
+	background: #83003f;
+	z-index: 1;
+}
+.puzzle-rules {
+	width: 20rem;
+	border-radius: 1rem;
+	padding: 1rem;
+	font-size: 1.1rem;
+	margin: 0.2rem 0;
+	background: #a5e08e;
+	display: none;
+}
 .controls button {
 	display: inline-flex;
 	align-items: center;

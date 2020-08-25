@@ -1091,7 +1091,7 @@ const App = (() => {
 		);
 	}
 	var P = Object.assign(App.prototype, {constructor: App});
-	App.VERSION = '0.14.2';
+	App.VERSION = '0.15.0';
 	App.reDigit = /^(?:Numpad|Digit|btn-)([0-9])$/;
 	App.Modes = Puzzle.Modes;
 	App.ModeToAction = {
@@ -1191,7 +1191,31 @@ const App = (() => {
 			});
 			puzzle.cages.forEach(cage => {
 				if(cage.cells.length === 0) {
-					console.warn('Cage without cells:', cage);
+					var headerElem = document.querySelector('.puzzle-header');
+					var titleElem = document.querySelector('.puzzle-title');
+					var authorElem = document.querySelector('.puzzle-author');
+					var rulesElem = document.querySelector('.puzzle-rules');
+					var reTitle = /^title:\s*(.*)/;
+					var reAuthor = /^author:\s*(.*)/;
+					var reRules = /^rules:\s*(.*)/;
+					if(cage.value.match(reTitle)) {
+						console.info('Title found in cage: "%s"', cage.value.replace(reTitle, '$1'));
+						titleElem.textContent = cage.value.replace(reTitle, '$1');
+						headerElem.style.display = "block";
+					}
+					else if(cage.value.match(reAuthor)) {
+						console.info('Author found in cage: "%s"', cage.value.replace(reAuthor, '$1'));
+						authorElem.textContent = cage.value.replace(reAuthor, '$1');
+						headerElem.style.display = "block";
+					}
+					else if(cage.value.match(reRules)) {
+						console.info('Rules found in cage:\n', cage.value.replace(reRules, '$1'));
+						rulesElem.innerHTML = cage.value.replace(reRules, '$1').replace('\\n', '<br />');
+						rulesElem.style.display = "block";
+					}
+					else {
+						console.warn('Cage without cells:', cage);
+					}
 					return;
 				}
 				var labelCell = [...cage.cells].sort(([r1, c1], [r2, c2]) => 
@@ -1324,15 +1348,15 @@ const App = (() => {
 		};
 	// Rendering
 		P.resize = function() {
-			console.info('App.resize();');
+			//console.info('App.resize();');
 			var gameElem = document.querySelector('.game'),
 				boardElem = document.querySelector('.board'),
 				gridElem = document.querySelector('.grid'),
 				svgElem = document.querySelector('svg#underlay');
 			var gameSize = Math.max(svgElem.clientWidth, svgElem.clientHeight) - 64;
 			var gameSpace = Math.min(gameElem.clientHeight, Math.max(boardElem.clientWidth, boardElem.clientHeight));
-			console.log('gameSize max(%s, %s) = %s', svgElem.clientWidth, svgElem.clientHeight, gameSize);
-			console.log('gameSpace min(%s, max(%s, %s)) = %s', gameElem.clientHeight, boardElem.clientWidth, boardElem.clientHeight, gameSpace);
+			//console.log('gameSize max(%s, %s) = %s', svgElem.clientWidth, svgElem.clientHeight, gameSize);
+			//console.log('gameSpace min(%s, max(%s, %s)) = %s', gameElem.clientHeight, boardElem.clientWidth, boardElem.clientHeight, gameSpace);
 			var scale = gameSpace / gameSize;
 			gridElem.style.transform = `scale(${scale})`;
 		};
