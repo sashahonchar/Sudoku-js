@@ -436,7 +436,7 @@ const SvgRenderer = (() => {
 				//style: 'font-size: ' + (fontSize === 28 ? 34 : 24) + 'px;',
 				style: `font-size: ${(Number(fontSize) + 4)}px;`,
 				stroke: '#fff',
-				'stroke-width': '1.5px',
+				'stroke-width': '2px',
 				'stroke-linecap': 'butt',
 				'stroke-linejoin': 'miter',
 				'paint-order': 'stroke fill',
