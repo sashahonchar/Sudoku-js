@@ -1,6 +1,6 @@
 {
   "name": "ctcapp",
-  "version": "0.13.1",
+  "version": "0.14.2",
   "description": "Sudoku Web App for Cracking The Cryptic",
   "main": "/public/index.js",
   "scripts": {
