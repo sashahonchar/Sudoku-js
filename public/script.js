@@ -1091,7 +1091,7 @@ const App = (() => {
 		);
 	}
 	var P = Object.assign(App.prototype, {constructor: App});
-	App.VERSION = '0.13.1';
+	App.VERSION = '0.14.2';
 	App.reDigit = /^(?:Numpad|Digit|btn-)([0-9])$/;
 	App.Modes = Puzzle.Modes;
 	App.ModeToAction = {
@@ -1116,9 +1116,18 @@ const App = (() => {
 		P.clearPuzzle = function() { return this.puzzle.clearPuzzle(); };
 		P.restartPuzzle = function() { return this.puzzle.restartPuzzle(); };
 		P.getCells = function(query) { return this.puzzle.getCells(query); };
-		P.loadPuzzle = function(puzzle) { return this.puzzle.loadPuzzle(puzzle); };
-		P.loadCTCPuzzle = function(ctcPuzzle) { return this.puzzle.loadCTCPuzzle(ctcPuzzle); };
-		P.loadRemoteCTCPuzzle = function(puzzleId) { return this.puzzle.loadRemoteCTCPuzzle(puzzleId); };
+		P.loadPuzzle = function(puzzle) {
+			this.puzzle.loadPuzzle(puzzle);
+			this.resize();
+		};
+		P.loadCTCPuzzle = function(ctcPuzzle) {
+			return this.puzzle.loadCTCPuzzle(ctcPuzzle)
+				.then(() => this.resize());
+		};
+		P.loadRemoteCTCPuzzle = function(puzzleId) {
+			return this.puzzle.loadRemoteCTCPuzzle(puzzleId)
+				.then(() => this.resize());
+		};
 		P.testDotPuzzle = function() {
 			var underlaySvg = document.querySelector('svg#underlay'),
 					overlaySvg = document.querySelector('svg#overlay')
@@ -1313,6 +1322,20 @@ const App = (() => {
 				.then(() => replay.puzzleId !== this.puzzle.puzzleId ? this.loadRemoteCTCPuzzle(replay.puzzleId) : null)
 				.then(() => this.puzzle.replayPlay({actions}, opts));
 		};
+	// Rendering
+		P.resize = function() {
+			console.info('App.resize();');
+			var gameElem = document.querySelector('.game'),
+				boardElem = document.querySelector('.board'),
+				gridElem = document.querySelector('.grid'),
+				svgElem = document.querySelector('svg#underlay');
+			var gameSize = Math.max(svgElem.clientWidth, svgElem.clientHeight) - 64;
+			var gameSpace = Math.min(gameElem.clientHeight, Math.max(boardElem.clientWidth, boardElem.clientHeight));
+			console.log('gameSize max(%s, %s) = %s', svgElem.clientWidth, svgElem.clientHeight, gameSize);
+			console.log('gameSpace min(%s, max(%s, %s)) = %s', gameElem.clientHeight, boardElem.clientWidth, boardElem.clientHeight, gameSpace);
+			var scale = gameSpace / gameSize;
+			gridElem.style.transform = `scale(${scale})`;
+		};
 	// Event Handlers
 		P.attachHandlers = function() {
 			//window.addEventListener('focus', event => console.warn('window.on(focus)'), {useCapture: true});
@@ -1337,11 +1360,16 @@ const App = (() => {
 						btn.addEventListener('keydown', this.handleButton);
 						btn.addEventListener('click', this.handleButton);
 					});
+			window.addEventListener('resize', this.handleResize, {passive: false});
 		};
 		P.getEventTarget = function(event) {
 			//console.info('App.getEventTarget(event);');
 			var point = (event.touches && event.touches[0]) || event;
 			return document.elementFromPoint(point.clientX, point.clientY);
+		};
+		P.handleResize = function() {
+			//console.info('App.handleResize();');
+			this.resize();
 		};
 		P.handleInputTimeout = function() {
 			//console.info('App.handleInputTimeout();', this.currentInput);

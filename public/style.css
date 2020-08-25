@@ -29,7 +29,7 @@ html, body {
 	margin: 0 auto;
 	padding: 0 2em;
 	line-height: 50px;
-	font-size: 20px;
+	font-size: 1.3rem;
 	color: #fff;
 }
 .menu a {
@@ -45,7 +45,7 @@ html, body {
 	display: block;
 	float: left;
 	width: 132px; height: 50px;
-	font-size: 15px;
+	font-size: 1rem;
 	line-height: 25px;
 }
 .game {
@@ -54,6 +54,8 @@ html, body {
 	flex: 1 0 auto;
 	align-items: center;
 	justify-content: center;
+	flex-direction: row;
+	margin: 0;
 }
 .board {
 	display: flex;
@@ -62,9 +64,12 @@ html, body {
 	align-items: center;
 	justify-content: center;
 	flex-direction: column;
-	width: 720px; height: 720px;
+	flex: 1 1 100%;
+	/*width: 720px; height: 720px;*/
 	background: #fff;
 	font-family: Tahoma, Verdana, sans-serif;
+	flex: 2 2 50%;
+	margin: 0;
 }
 .board svg {
 	position: absolute;
@@ -94,6 +99,7 @@ html, body {
 	align-items: stretch;
 	cursor: pointer;
 	-webkit-tap-highlight-color: rgba(0,0,0,0);
+	position: absolute;
 }
 .row {
 	display: flex;
@@ -119,23 +125,27 @@ html, body {
 	left: 50%; top: 50%;
 	transform: translate(-50%, -50%);
 }
-.cell-given { font-size: 40px; color: #000; }
-.cell-value { font-size: 40px; }
+.cell-given { font-size: 2.4rem; color: #000; }
+.cell-value { font-size: 2.4rem; }
 .cell-cagevalue {
 	position: absolute;
 	z-index: 5;
 	top: 2px; left: 2px;
-	font-size: 13.33px;
-	background-color: #fff;
+	font-size: 1rem;
+	/*background-color: #fff;*/
+	text-shadow:
+		-1px -1px 1px #fff, 0px -1px 1px #fff, 1px -1px 1px #fff,
+		-1px  0px 1px #fff, 0px  0px 1px #fff, 1px  0px 1px #fff,
+		-1px  1px 1px #fff, 0px  1px 1px #fff, 1px  1px 1px #fff;
 }
-.cell-candidate { font-size: 15px; }
+.cell-candidate { font-size: 0.9rem; }
 .cell-pencilmark {
 	position: absolute;
 	left: 50%; top: 50%;
 	transform: translate(-50%, -50%);
 	color: #1d6ae5;
 }
-.cell-pencilmark { font-size: 14.3px; }
+.cell-pencilmark { font-size: 0.9rem; }
 .pm-0 { left: 20%; top: 20%; }
 .pm-1 { left: 80%; top: 20%; }
 .pm-2 { left: 20%; top: 80%; }
@@ -215,20 +225,20 @@ html, body {
 	align-items: center;
 	justify-content: center;
 	transform-origin: middle center;
-	transform: scale(1.6);
-	padding: 100px;
+	margin-right: 2rem;
 }
 .controls button {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	height: 28px;
-	margin-bottom: 4px;
+	height: 3rem;
+	/*margin-bottom: 0.2rem;*/
+	margin: 0.15rem;
 	padding: 0;
-	font-size: 13px;
+	font-size: 1.3rem;
 	font-weight: 500;
 	border: 1px solid #ccc;
-	border-radius: 4px;
+	border-radius: 0.5rem;
 	color: #6a1b9a;
 	background-color: #fff;	
 	cursor: pointer;
@@ -240,37 +250,59 @@ html, body {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	width: 20rem;
 }
 .controls-mode {
 	display: flex;
-	flex-direction: column;
-	align-items: stretch;
+	flex-direction: row;
+	flex-wrap: wrap;
+	/*align-items: stretch;*/
 	justify-content: space-between;
-	margin-right: 8px;
-	width: 60px;
+	/*margin-right: 8px;*/
+	/*width: 100px;*/
+	width: 8.5rem;
+	margin: 0 -0.15rem;
+}
+.controls-mode button {
+	/*width: 30%;*/
+	flex: 1 1 2rem;
 }
 .controls-input {
 	display: flex;
-	flex-wrap: wrap;
 	flex-direction: row;
+	flex-wrap: wrap;
 	justify-content: space-between;
-	width: 100px;
+	/*width: 160px;*/
+	width: 11.5rem;
+	margin: 0 -0.15rem;
 }
 .controls-input button {
-	width: 30%;
+	/*width: 30%;*/
+	flex: 1 1 3.5rem;
 }
 .controls-input button[data-control="delete"] {
-	width: 65%;
+	/*width: 65%;*/
+	flex: 1 1 7.35rem;
 }
 .controls-aux {
 	display: flex;
+	flex-direction: row;
 	flex-wrap: wrap;
 	justify-content: space-between;
-	width: 168px;
-	margin-top: 8px;
+	/*width: 268px;*/
+	/*margin-top: 8px;*/
+	/*width: 100%;*/
+	margin: 0.5rem -0.15rem;
+	width: 20.5rem;
+}
+.controls-aux > *:not(:last-child) {
 }
 .controls-aux button {
-	width: 80px;
+	/*width: 80px;*/
+	flex: 1 1 40%;
+	/*margin: 20px;*/
+	/*margin: 0.25rem;*/
+	margin: 0.15rem;
 }
 .mode-normal [data-control="normal"],
 .mode-corner [data-control="corner"],
@@ -294,7 +326,7 @@ html, body {
 
 .mode-corner .controls-input button.digit,
 .mode-centre .controls-input button.digit
-{ padding: 5px; font-size: 10px; font-weight: 400; }
+{ padding: 5px; font-size: 0.9rem; font-weight: 400; }
 .mode-corner button[data-control="1"] { align-items: flex-start; justify-content: flex-start; }
 .mode-corner button[data-control="2"] { align-items: flex-start; justify-content: center; }
 .mode-corner button[data-control="3"] { align-items: flex-start; justify-content: flex-end; }
@@ -338,12 +370,15 @@ button.confirm-restart, button.confirm-restart:hover {
 	}
 	.controls {
 		flex-direction: row;
+		margin-right: 0;
+		margin-bottom: 2rem;
 	}
 	.controls-aux {
-		flex-direction: column;
-		width: 60px;
-		margin-top: 0px;
-		margin-left: 8px;
+		width: 10rem;
+		margin-left: 0.5rem;
+	}
+	.controls-aux button {
+		flex: 1 1 100%;
 	}
 }
 @media screen and (orientation:landscape) {
