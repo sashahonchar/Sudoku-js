@@ -225,7 +225,7 @@ html, body {
 	height: 28px;
 	margin-bottom: 4px;
 	padding: 0;
-	font-size: 14px;
+	font-size: 13px;
 	font-weight: 500;
 	border: 1px solid #ccc;
 	border-radius: 4px;
@@ -305,41 +305,26 @@ html, body {
 .mode-corner button[data-control="8"] { align-items: flex-end; justify-content: center; }
 .mode-corner button[data-control="9"] { align-items: flex-end; justify-content: flex-end; }
 .mode-colour button.digit {
+	position: relative;
 	color: transparent;
-	outline: 12px solid white;
-	outline-offset: -20px;
+	/*outline: 12px solid white;
+	outline-offset: -20px;*/
 }
-.mode-colour button[data-control="1"] { outline-color: rgb(255, 255, 255); }
-.mode-colour button[data-control="2"] { outline-color: rgb(0, 0, 0); }
-.mode-colour button[data-control="3"] { outline-color: rgb(207, 207, 207); }
-.mode-colour button[data-control="4"] { outline-color: rgb(163, 224, 72); }
-.mode-colour button[data-control="5"] { outline-color: rgb(210, 59, 231); }
-.mode-colour button[data-control="6"] { outline-color: rgb(235, 117, 50); }
-.mode-colour button[data-control="7"] { outline-color: rgb(230, 38, 31); }
-.mode-colour button[data-control="8"] { outline-color: rgb(247, 208, 56); }
-.mode-colour button[data-control="9"] { outline-color: rgb(52, 187, 230); }
-.mode-colour button[data-control="0"] { outline-color: rgb(95, 95, 95); }
-
-/* Red X on white colour for "clear" */
-.mode-colour button[data-control="1"]:before, .mode-colour button[data-control="1"]:after {
+.mode-colour button.digit:after {
 	content: '';
 	position: absolute;
-	width: 20px;
-	height: 3px;
-	background-color: #f00;
-	border-radius: 2px;
-	box-shadow 0 0 2px 0 #000;
+	width: 60%; height: 60%;
 }
-.mode-colour button[data-control="1"]:before {
-	-webkit-transform: rotate(45deg);
-	-moz-transform: rotate(45deg);
-	transform: rotate(45deg);
-}
-.mode-colour button[data-control="1"]:after {
-	-webkit-transform: rotate(-45deg);
-	-moz-transform: rotate(-45deg);
-	transform: rotate(-45deg);
-}
+.mode-colour button[data-control="0"]:after { background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0px, rgba(255, 255, 255, 0.9) 4px, rgba(150, 150, 150, 0.9) 4px, rgba(150, 150, 150, 0.9) 8px); }
+.mode-colour button[data-control="1"]:after { background-color: rgb(207, 207, 207); }
+.mode-colour button[data-control="2"]:after { background-color: rgb(95, 95, 95); }
+.mode-colour button[data-control="3"]:after { background-color: rgb(0, 0, 0); }
+.mode-colour button[data-control="4"]:after { background-color: rgb(163, 224, 72); }
+.mode-colour button[data-control="5"]:after { background-color: rgb(210, 59, 231); }
+.mode-colour button[data-control="6"]:after { background-color: rgb(235, 117, 50); }
+.mode-colour button[data-control="7"]:after { background-color: rgb(230, 38, 31); }
+.mode-colour button[data-control="8"]:after { background-color: rgb(247, 208, 56); }
+.mode-colour button[data-control="9"]:after { background-color: rgb(52, 187, 230); }
 
 button.confirm-restart, button.confirm-restart:hover {
 	color: white;

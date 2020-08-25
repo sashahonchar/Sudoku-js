@@ -1,4 +1,4 @@
-//console.clear();
+console.clear();
 
 var sudoku;
 
@@ -38,6 +38,7 @@ const Cell = (() => {
 		this.pencilMarks = [];
 		this.childElems = {};
 	}
+	Cell.Props = ['value', 'candidates', 'pencilmarks', 'colour'];
 	Cell.StateKeys = ['v','c','pm','cl','hl'];
 	Cell.reStripSlashes = /\/+$/;
 	var P = Cell.prototype = Object.assign(new Part(), {constructor: Cell});
@@ -64,6 +65,7 @@ const Cell = (() => {
 	P.hasState = function(state) {
 		return this.elem.classList.contains(state);
 	};
+	P.hasValue = function() { return this.value !== undefined; };
 	P.clearValue = function() {
 		if(this.value === undefined) return false;
 		this.clearChildElem('cell-value');
@@ -72,30 +74,50 @@ const Cell = (() => {
 		this.showPencilMarks();
 		return true;
 	};
-	P.clearPencilMarks = function() {
-		if(this.pencilMarks.length === 0) return false;
-		this.hidePencilMarks();
-		this.pencilMarks.length = 0;
-		return true;
-	};
+	P.hasCandidates = function() { return this.candidates.length > 0; };
 	P.clearCandidates = function() {
 		if(this.candidates.length === 0) return false;
 		this.hideCandidates();
 		this.candidates.length = 0;
 		return true;
 	};
+	P.hasPencilMarks = function() { return this.pencilMarks.length > 0; };
+	P.clearPencilMarks = function() {
+		if(this.pencilMarks.length === 0) return false;
+		this.hidePencilMarks();
+		this.pencilMarks.length = 0;
+		return true;
+	};
+	P.hasColour = function() { return this.colour !== undefined; };
 	P.clearColour = function() {
 		if(this.colour === undefined) return false;
 		this.colour = undefined;
 		this.hideColour();
 		return true;
 	};
+	P.hasProp = function(prop) {
+		switch(prop) {
+			case 'value': return this.hasValue();
+			case 'candidates': return this.hasCandidates();
+			case 'pencilmarks': return this.hasPencilMarks();
+			case 'colour': return this.hasColour();
+		}
+	};
+	P.clearProp = function(prop) {
+		switch(prop) {
+			case 'value': return this.clearValue();
+			case 'candidates': return this.clearCandidates();
+			case 'pencilmarks': return this.clearPencilMarks();
+			case 'colour': return this.clearColour();
+		}
+	};
 	P.clear = function({levels = 0, mode = 'normal'} = {}) {
 		//console.info('Cell.clear({levels = %s, mode = %s});', levels, mode);
 		switch(mode) {
-			case 'normal': case 'corner': this.clearValue() || this.clearPencilMarks() || this.clearCandidates() || this.clearColour(); break;
+			case 'normal': this.clearValue() || this.clearCandidates() || this.clearPencilMarks() || this.clearColour(); break;
+			case 'corner': this.clearValue() || this.clearPencilMarks() || this.clearCandidates() || this.clearColour(); break;
 			case 'centre': this.clearValue() || this.clearCandidates() || this.clearPencilMarks() || this.clearColour(); break;
-			case 'colour': this.clearColour() || this.clearValue() || this.clearPencilMarks() || this.clearCandidates(); break;
+			case 'colour': this.clearColour() || this.clearValue() || this.clearCandidates() || this.clearPencilMarks(); break;
 			case 'all': this.clearValue() && this.clearPencilMarks() && this.clearCandidates() && this.clearColour(); break;
 			default: console.error('Cell.clear > Invalid mode:', mode);
 		}
@@ -179,7 +201,9 @@ const Cell = (() => {
 			this.elem.classList.remove('colour-1', 'colour-2', 'colour-3', 'colour-4', 'colour-5', 'colour-6', 'colour-7', 'colour-8', 'colour-9', 'colour-0');
 			if(this.colour !== undefined) this.elem.classList.add('colour-' + this.colour);
 		};
-		P.toggleColour = function(colour) {
+		P.setColour = function(colour) {
+			//console.info('Cell.setColour(%s);', colour);
+			if(colour == 0) return this.clearColour();
 			this.colour = colour;
 			this.showColour();
 		};
@@ -193,7 +217,7 @@ const Cell = (() => {
 			if(json.v !== undefined) this.setValue(json.v);
 			if(json.c !== undefined) json.c.split(',').forEach(can => this.toggleCandidates(can));
 			if(json.pm !== undefined) json.pm.split(',').forEach(pm => this.togglePencilMark(pm));
-			if(json.cl !== undefined) this.toggleColour(json.cl);
+			if(json.cl !== undefined) this.setColour(json.cl);
 			if(json.hl === true) this.highlight(true);
 		};
 		P.toJSON = function() {
@@ -457,7 +481,8 @@ const Replay = (() => {
 			} catch(err) {
 				console.error(err);
 				console.error('Error in Replay.actA2B for act:', act);
-				throw err;
+				//throw err;
+				res = '';
 			}
 			return res;
 		};
@@ -477,7 +502,8 @@ const Replay = (() => {
 			} catch(err) {
 				console.error(err);
 				console.error('Error in Replay.actB2A for act:', act);
-				throw err;
+				//throw err;
+				res = '';
 			}
 			return res;
 		};
@@ -495,15 +521,16 @@ const Replay = (() => {
 				res += tSepC + (dt || 0);
 			} catch(err) {
 				console.error(err);
-				console.error('Error in Replay.actA2B for act:', act);
-				throw err;
+				console.error('Error in Replay.actA2C for act:', act);
+				//throw err;
+				res = '';
 			}
 			return res;
 		};
 	};
 	const actC2A = Replay.actC2A = w => {
 		var convertRc = listNumToRcv(w);
-		return act => {
+		return (act, idx) => {
 			try {
 				var [type, arg, dt] = parseActC(act);
 				var res = actA[type.codePointAt(0) - 'A'.codePointAt(0)];
@@ -515,8 +542,9 @@ const Replay = (() => {
 				res = res.toLowerCase();
 			} catch(err) {
 				console.error(err);
-				console.error('Error in Replay.actB2A for act:', act);
-				throw err;
+				console.error('Error in Replay.actC2A for act:', act, idx);
+				//throw err;
+				res = '';
 			}
 			return res;
 		};
@@ -769,6 +797,56 @@ const Puzzle = (() => {
 			this.lastActTime = t;
 			this.replayStack.push(act + '/' + Math.round(dt / Puzzle.logTimeResolutionMs));
 		};
+		P.findHighestCellProp = function(cells, mode) {
+			var props = [];
+			switch(mode) {
+				case 'normal': props = ['value', 'candidates', 'pencilmarks', 'colour']; break;
+				case 'corner': props = ['pencilmarks', 'candidates', 'colour', 'value']; break;
+				case 'centre': props = ['candidates', 'pencilmarks', 'colour', 'value']; break;
+				case 'colour': props = ['colour', 'value', 'candidates', 'pencilmarks']; break;
+			}
+			//console.log('props:', props);
+			var firstProp = props.length;
+			cells.forEach(cell => {
+				var idx = props.findIndex(prop => cell.hasProp(prop));
+				if(idx > -1) firstProp = Math.min(firstProp, idx);
+				//console.log('cells[%s]:', this.cellsToString(cell), props.map(prop => prop+': '+cell.hasProp(prop)).join(', '), idx);
+			});
+			var clearProp = props[firstProp];
+			console.log('clearProp:', clearProp);
+			cells.forEach(cell => cell.clearProp(clearProp));
+		};
+		P.clearCells = function({mode = 'normal', cells = this.selectedCells}) {
+			console.info('Puzzle.clearCells(%s, %s);', mode, this.cellsToString(cells));
+			
+			/*
+			case 'normal': this.clearValue() || this.clearCandidates() || this.clearPencilMarks() || this.clearColour(); break;
+			case 'corner': this.clearValue() || this.clearPencilMarks() || this.clearCandidates() || this.clearColour(); break;
+			case 'centre': this.clearValue() || this.clearCandidates() || this.clearPencilMarks() || this.clearColour(); break;
+			case 'colour': this.clearColour() || this.clearValue() || this.clearCandidates() || this.clearPencilMarks(); break;
+			case 'all': this.clearValue() && this.clearPencilMarks() && this.clearCandidates() && this.clearColour(); break;
+			*/
+			/*
+			var props = [];
+			switch(mode) {
+				case 'normal': props = ['value', 'candidates', 'pencilmarks', 'colour']; break;
+				case 'corner': props = ['value', 'pencilmarks', 'candidates', 'colour']; break;
+				case 'centre': props = ['value', 'candidates', 'pencilmarks', 'colour']; break;
+				case 'colour': props = ['colour', 'value', 'candidates', 'pencilmarks']; break;
+			}
+			console.log('props:', props);
+			cells.forEach(cell => {
+				console.log('cells[%s]:', this.cellsToString(cell), props,
+										props.map(prop => cell.hasProp(prop)),
+										props.findIndex(prop => cell.hasProp(prop))
+									 );
+			});
+			*/
+			console.log('findHighestCellProp:', this.findHighestCellProp(cells, mode));
+			
+			//cells.forEach(cell => cell.clear({mode}));
+			
+		};
 		P.exec = function(action) {
 			var {type, arg} = this.parseAction(action), selectedCells = this.selectedCells;
 			//console.info('Puzzle.exec("%s");', this.actionToString(action));
@@ -809,11 +887,11 @@ const Puzzle = (() => {
 					});
 					//console.error('Implement DESELECT:', this.cellsToString(arg));
 					return true;
-				case 'clear': selectedCells.forEach(cell => cell.clear({mode: arg})); return true;
+				case 'clear': this.clearCells({mode: arg, cells: selectedCells}); return true;
 				case 'value': selectedCells.forEach(cell => cell.setValue(arg)); return true;
 				case 'candidates': selectedCells.forEach(cell => cell.toggleCandidates(arg)); return true;
 				case 'pencilmarks': selectedCells.forEach(cell => cell.togglePencilMark(arg)); return true;
-				case 'colour': selectedCells.forEach(cell => cell.toggleColour(arg)); return true;
+				case 'colour': selectedCells.forEach(cell => cell.setColour(arg)); return true;
 				default: console.error('Puzzle.act: unkown action type:', type, action); return false;
 			}
 			throw new Error('Invalid type!');
@@ -821,7 +899,7 @@ const Puzzle = (() => {
 		P.act = function(action) {
 			action = this.parseAction(action);
 			var act = this.actionToString(action);
-			//console.info('Puzzle.act("%s");', act, action);
+			console.info('Puzzle.act("%s");', act, action);
 			if(this.errorsVisible && !Puzzle.isSelection(action.type)) {
 				this.cells.forEach(cell => cell.error(false));
 			}
@@ -986,7 +1064,7 @@ const App = (() => {
 		this.move = 'none';
 		this.paintState = 'none';
 		this.paintStateVal = false;		
-		this.highlighting = undefined;
+		this.selecting = undefined;
 		this.mode = 'normal';
 		this.startTime = this.lastActTime = Date.now();
 		//this.highlightedCells = [];
@@ -1019,6 +1097,7 @@ const App = (() => {
 	App.DoubleInputTimeout = 500;
 	App.DoubleInputDistance = 10;
 	App.distance = (a, b) => { const dx = b.x - a.x, dy = b.y - a.y; return Math.round(Math.sqrt(dx * dx + dy * dy)); };
+	App.DefaultReplayType = 'clzw';
 	// Puzzle
 		P.createPuzzle = function(opts) { return this.puzzle.createPuzzle(opts); };
 		P.clearPuzzle = function() { return this.puzzle.clearPuzzle(); };
@@ -1047,10 +1126,11 @@ const App = (() => {
 			this.testDot = true;
 		};
 		P.convertPuzzle = function(puzzle) {
-			console.warn('App.convertPuzzle(puzzle);', puzzle);
+			console.warn('Puzzle.convertPuzzle(puzzle);', puzzle);
 			var svgRenderer = this.svgRenderer;
 			var underlaySvg = document.querySelector('svg#underlay'),
 					overlaySvg = document.querySelector('svg#overlay');
+			try {
 			var rows = puzzle.cells.length, cols = Math.max.apply(Math, puzzle.cells.map(row => row.length));
 			this.createPuzzle({rows, cols});
 			[...underlaySvg.children].forEach(child => (child.nodeName !== 'defs') ? child.remove() : null);
@@ -1104,6 +1184,12 @@ const App = (() => {
 				}
 				cages.push(outCage);
 			});
+			}
+			catch(err) {
+				console.error('Error in Puzzle.convertPuzzle:', err);
+				console.log('  puzzle:', puzzle);
+				throw err;
+			}
 			return {givens, cages};
 		};
 		P.handleCancelRestartPuzzle = function() {
@@ -1135,8 +1221,8 @@ const App = (() => {
 		};
 		P.select = function(cells) { return this.puzzle.select(cells); };
 		P.deselect = function(cells) { return this.puzzle.deselect(cells); };
-		P.smartSelectCell = function(cell) {
-			//console.info('App.smartSelectCell(cell);', cell, this.mode);
+		P.smartSelectCell = function(cell, skipDeselect = false) {
+			console.warn('App.smartSelectCell(cell, skipDeselect = %s);', cell, this.mode, skipDeselect === true);
 			const makeSelector = (cell, type) => {
 				if(Array.isArray(type)) return type.reduce((acc, cur) => acc || makeSelector(cell, cur), undefined); 
 				var selFn, selVal;
@@ -1157,7 +1243,7 @@ const App = (() => {
 			}
 			if(selector !== undefined) cells = this.grid.getCellList().filter(selector);
 			if(cells.length > 0) {
-				this.deselect();
+				if(!skipDeselect) this.deselect();
 				this.select(cells);
 			}
 		};
@@ -1190,19 +1276,26 @@ const App = (() => {
 			}
 		};
 	// Replay
-		P.getReplay = function() {
-			return JSON.stringify({
-				puzzleId: this.puzzle.puzzleId,
-				data: Replay.replayA2C(this.puzzle.replayStack.join(','))
-			});
+		P.getReplay = function(opts = {}) {
+			var type = opts.type || App.DefaultReplayType;
+			var res = {puzzleId: this.puzzle.puzzleId, type};
+			switch(type) {
+				case 'clzw': res.data = LZipper.compact64(Replay.replayA2C(this.puzzle.replayStack.join(','))); break;
+				default: res.data = Replay.replayA2C(this.puzzle.replayStack.join(','));
+			}
+			return JSON.stringify(res);
 		};
 		P.loadReplay = function(replay, opts) {
 			if(typeof replay === 'string') replay = JSON.parse(replay);
-			console.log('replay:', replay);
-			console.log('replay.puzzleId:', replay.puzzleId);
+			var type = replay.type || 'c';
+			var actions = [];
+			switch(type) {
+				case 'clzw': actions = Replay.replayC2A(LZipper.expand64(replay.data)).split(','); break;
+				default: actions = Replay.replayC2A(replay.data).split(',');
+			}
 			return Promise.resolve()
 				.then(() => replay.puzzleId !== this.puzzle.puzzleId ? this.loadRemoteCTCPuzzle(replay.puzzleId) : null)
-				.then(() => this.puzzle.replayPlay({actions: Replay.replayC2A(replay.data).split(',')}, opts));
+				.then(() => this.puzzle.replayPlay({actions}, opts));
 		};
 	// Event Handlers
 		P.attachHandlers = function() {
@@ -1287,33 +1380,32 @@ const App = (() => {
 			this.handleDragMove(event);
 		};
 		P.handleSpecialInput = function(event) { // double or long input
-			//console.warn('App.handleSpecialInput(event);', event);
+			console.warn('App.handleSpecialInput(event);', event);
 			if(event.target.classList.contains('cell')) {
 				var cell = this.grid.elemToCell(event.target);
-				if(cell) this.smartSelectCell(cell);
+				if(cell) this.smartSelectCell(cell, event.ctrlKey);
 			}
 		};
 		
 		P.handleCancel = function(event) {
-			//console.info('App.handleCancel:', event.type, event, event.target);
+			console.info('App.handleCancel:', event.type, event, event.target);
 			if(this.isDragging === false) this.deselect();
 		};
 		P.handleDragStart = function(event) {
 			if(event.target.nodeName === 'BUTTON') return;
-			//console.info('App.handleDragStart(event);');
+			console.info('App.handleDragStart(event);');
 			this.isDragging = true;
 			this.handleCancelRestartPuzzle();
-			if(!event.target.classList.contains('cell')) {
-				//this.act({type: 'deselect'});
-				return this.deselect();
-			}
-			this.highlighting = true;
-			if(!event.ctrlKey && event.target.nodeName !== 'BUTTON') this.deselect();
+			// If clicking button, don't drag
+			if(event.target.nodeName === 'BUTTON') return;
+			// If holding CTRL, don't deselect
+			if(!event.ctrlKey) this.deselect();
+			this.selecting = true;
 			var cell = this.grid.elemToCell(event.target);
 			if(cell) {
-				if(event.ctrlKey && cell.hasState('highlight')) this.highlighting = false;
-				//cell.highlight(this.highlighting);
-				if(this.highlighting) {
+				if(event.ctrlKey && cell.hasState('highlight')) this.selecting = false;
+				//cell.highlight(this.selecting);
+				if(this.selecting) {
 					this.select(cell);
 				}
 				else {
@@ -1324,27 +1416,28 @@ const App = (() => {
 		P.handleDragEnd = function(event) {
 			//console.info('App.handleDragEnd(event);', event);
 			this.isDragging = false;
-			if(this.highlighting !== undefined) {
-				var nextHighlightedCells = this.grid.getCellList().filter(cell => cell.hasState('highlight'));
-				//this.act({type: 'select', arg: nextHighlightedCells});
-				this.highlighting = undefined;
+			if(this.selecting !== undefined) {
+				//var nextSelectedCells = this.grid.getCellList().filter(cell => cell.hasState('highlight'));
+				//this.act({type: 'select', arg: nextSelectedCells});
+				this.selecting = undefined;
 			}
 			//event.preventDefault();
 		};
 		P.handleDragMove = function(event) {
 			if(this.isDragging !== true) return;
-			//console.info('App.handleDragMove(event);', this.highlighting);
+			//console.info('App.handleDragMove(event);', this.selecting);
 			var eventTarget = this.getEventTarget(event);
-			if(this.highlighting !== undefined) {
+			if(this.selecting !== undefined) {
 				var cell = this.grid.elemToCell(eventTarget);
 				if(cell) {
-					//cell.highlight(this.highlighting);
+					//cell.highlight(this.selecting);
 					this.select(cell);
 				}
 			}
 		};
 		P.doPressDigit = function(digit) {
 			//console.log('App.doPressDigit(%s); mode: %s', digit, this.mode);
+			/*
 			if(this.mode === 'colour' && digit === '1') {
 				//console.log('Pressed colour 1!');
 				this.act({type: 'clear', arg: this.mode});
@@ -1352,6 +1445,8 @@ const App = (() => {
 			else {
 				this.act({type: App.ModeToAction[this.mode], arg: digit});
 			}
+			*/
+			this.act({type: App.ModeToAction[this.mode], arg: digit});
 		};
 		P.handleKeydown = function(event) {
 			//console.info('App.handleKeydown:', event.type, event, event.target);
@@ -1405,9 +1500,21 @@ const App = (() => {
 			else if(event.code === 'KeyY' && event.ctrlKey) {
 				this.act({type: 'redo'});
 			}
+			else if(event.code === 'KeyZ') {
+				this.changeMode(Puzzle.Modes[0]);
+			}
+			else if(event.code === 'KeyX') {
+				this.changeMode(Puzzle.Modes[1]);
+			}
+			else if(event.code === 'KeyC') {
+				this.changeMode(Puzzle.Modes[2]);
+			}
+			else if(event.code === 'KeyV') {
+				this.changeMode(Puzzle.Modes[3]);
+			}
 			else {
 				console.log('Unhandled keydown event: key, code, ctrl, alt, shift, meta:', event.key, event.code, event.ctrlKey, event.altKey, event.shiftKey, event.metaKey);
-			}			
+			}
 		};
 		P.handleKeyup = function(event) { // Cancel temp mode
 			//console.info('App.handleKeyup:', event.type, event, event.target);
@@ -1723,10 +1830,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	if(typeof urlPathPuzzleId === 'string') puzzleId = urlPathPuzzleId;
 	
 	console.log('puzzleId:', puzzleId);
-	if(typeof puzzleId === 'string') {
+	if(typeof puzzleId === 'string' && puzzleId !== '') {
 		app.loadRemoteCTCPuzzle(puzzleId);
 	}
 	
+	//app.loadReplay('{"puzzleId":"QbGnr6P2h3","type":"clzw","data":"JIRgrA+gbKUQTKA7BEAhEr4ClwiiCkqAKYQAMoAZgsPOagCKbi4khX0THwqXwAOWvACcTeBBHZeg0RAHAAzA0qLMiRRJABRdWG0AWCAajZlazahFKAxhSAAA"}', {speed: -1});
+	//app.loadReplay('{"puzzleId":"QbGnr6P2h3","type":"clzw","data":"JIRgrA+gDKBs2gOzQEImgKXCWJkxAFMEQAzBAJimgBF0otCyrL9gKAOSgTloswqJOFXjADM1cfWBj+UAKL15AFkwSxIWQjEBjNXvChiBcmPbUQdCBIDC6cEA"}', {speed: -1});
+	app.loadReplay('{"puzzleId":"QbGnr6P2h3","type":"clzw","data":"JIBhH0EYBZUrQCYEgMzhKaHQFYcgBsBA7AQBxQBC8kiAUmCJCImiNCLkSCSJYWCR4mFuESgAZigCmBACYoAxigBGBAIYoAnOFwBhWg2EsQkkDJDyQSkKpAaQu2HRyR0EmAkj5RxUWSilKK6ologACLwbPR07jA+kISQJJDkkNqQWtrAiOiYiMgSiLS5EKLSonKiipBCKp7quACi0ZD0eYUlbJCSkDKQ8pBKkOrCudggHdiFQuqiDUK1QtVClWU4JZvIBeiQzTNTo8OD/b1s3YV7qBOb+DeI/rlkdYjBuaG54bnzuSoghnA2lwUSghGmiFwj0QJDeiG0iA0iFUiBUqAkqF8wFQ2DqqD22J22JE2PKuWkrzkr0UiAO4FQhCo2HI+mwhEBIJmqFBiAAYhAGfRMTj8ejUO5WJJEDJELUctBfPQFeIcgycKgXtjKHjPqhvqhfqh/tjlqg5NBmmRuPp7oQImQ8lRiIKGRrUORUNo9Qajah5GaoCRsetOOJgNBStBkHVoPlw5Nw/gY09oC9WeASCQbWD9HsAcQ6ELJJwI1HY9AK7hoIRUxnw2R0eHiBJlTHceG41GcBGEKGMdJoDzB8gQehCM18BGqJR4UqSNWFRXy4hS2hpHkgAAA="}', {speed: -1});
 	//https://cdpn.io/killroy/debug/oNbEjjJ/xnMabZPbWdvr?puzzleid=7FTq4BpLhf
 	/*
 	var puzzle = testPuzzles['fRftpGmpdT'];
@@ -1782,3 +1892,192 @@ document.addEventListener('DOMContentLoaded', () => {
 	document.addEventListener('mousemove', event => o.handleMove(event));
 	*/
 });
+
+var LZipper = (function () {
+	var fcc = String.fromCharCode;
+	function data16to8Bit(str) {
+		var i, res, len, c;
+		res = '';
+		len = str.length;
+		for(i = 0; i < len; i++) {
+			c = str.charCodeAt(i);
+			res += String.fromCharCode((c >> 8) & 0xff);
+			res += String.fromCharCode(c & 0xff);
+		}
+		return res;
+	}
+	function data8to16Bit(str) {
+		var i, res, len, c;
+		res = '';
+		len = str.length;
+		for(i = 0; i < len; i++){
+			c = (str.charCodeAt(i) & 0xff) << 8;
+			i++;
+			if(i < len) c += str.charCodeAt(i) & 0xff;
+			res += fcc(c);
+		}
+		return res;
+	}
+	function compress(data) {
+		function dec(numBits, v, noShift) {
+			var i, m = noShift ? 0xffffffffff : 1;
+			for (i = 0; i < numBits; i++) {
+				val = (val << 1) | (v & m);
+				if(pos === 15) {
+					pos = 0;
+					str += fcc(val);
+					val = 0;
+				} else pos++;
+				if(noShift) v = 0;
+				else v >>= 1;
+			}
+		}
+		if(data === null || data === undefined || data === '') return '';
+		var i, ii, f,c,w,wc,enlargeIn,dictSize,numBits,str,val,pos,len,dic;
+		len = data.length;
+		dic = {};
+		c = w = wc = '';
+		w = '';
+		enlargeIn = numBits = 2;
+		dictSize = 3;
+		str = '';
+		val = pos = 0;
+		for (ii = 0; ii < len; ii += 1) {
+			c = data.charAt(ii);
+			if(dic[c] === undefined) dic[c] = {size: dictSize++, create: true};
+			wc = w + c;
+			if(dic[wc] !== undefined) {
+				w = wc;
+			}
+			else {
+				if(dic[w].create) {
+					if(w.charCodeAt(0) < 256) {
+						dec(numBits, 0);
+						dec(8, w.charCodeAt(0));
+					}
+					else {
+						dec(numBits, 1, true)
+						dec(16, w.charCodeAt(0));
+					}
+					enlargeIn--;
+					if(enlargeIn === 0) {
+						enlargeIn = Math.pow(2, numBits);
+						numBits++;
+					}
+					dic[w].create = false;
+				}
+				else dec(numBits, dic[w].size);
+				enlargeIn--;
+				if(enlargeIn === 0) {
+					enlargeIn = Math.pow(2, numBits);
+					numBits++;
+				}
+				if(dic[wc] !== undefined) dic[wc].size = dictSize++;
+				else dic[wc] = {size: dictSize++, create: false};
+				w = String(c);
+			}
+		}
+		if(w !== '') {
+			if(dic[w].create) {
+				if(w.charCodeAt(0) < 256) {
+					dec(numBits, 0);
+					dec(8, w.charCodeAt(0));
+				}
+				else {
+					dec(numBits, 1, true)
+					dec(16, w.charCodeAt(0));
+				}
+				enlargeIn--;
+				if(enlargeIn === 0) {
+					enlargeIn = Math.pow(2, numBits);
+					numBits++;
+				}
+				dic[w].create = false;
+			}
+			else dec(numBits, dic[w].size);
+			enlargeIn--;
+			if(enlargeIn === 0) {
+				enlargeIn = Math.pow(2, numBits);
+				numBits++;
+			}
+		}
+		dec(numBits, 2);
+		while (true) {
+			val <<= 1;
+			if(pos == 15) {
+				str += fcc(val);
+				break;
+			}
+			else pos++;
+		}
+		return str;
+	}
+	function decompress(cp) {
+		var dic,len,s,w,bits,c,enlargeIn,dicSize,numBits,entry,result,str,val,pos,index;
+		function dec(maxP) {
+			var p = 1,b = 0;
+			while(p != maxP) {
+				b |= ((val & pos) > 0 ? 1 : 0) * p;
+				p <<= 1;
+				pos >>= 1;
+				if(pos === 0) {
+					pos = 32768;
+					val = str.charCodeAt(index++);
+				}
+			}
+			return b;
+		}
+		if(cp === null || cp === '' || cp === undefined) return '';
+		dic = [0, 1, 2];
+		len = cp.length
+		s = [256, 65536];
+		enlargeIn = dicSize = 4;
+		numBits = 3;
+		entry = result = '';
+		str = cp;
+		val = cp.charCodeAt(0);
+		pos = 32768;
+		index = 1;
+		bits = dec(4);
+		if(bits === 2) return ''; 
+		if(bits < 2) {
+			bits = dec(s[bits]);
+			c = fcc(bits);
+		}
+		dic[3] = w = result = c;
+		while (true) {
+			if(index > len) return '';
+			c = bits = dec(Math.pow(2, numBits));
+			if(bits === 2) return result;
+			if(bits < 2) {
+				bits = dec(s[bits]);
+				dic[dicSize++] = fcc(bits);
+				c = dicSize - 1;
+				enlargeIn--;
+			}
+			if(enlargeIn === 0) {
+				enlargeIn = Math.pow(2, numBits);
+				numBits++;
+			}
+			if(dic[c]) {
+				entry = dic[c];
+			}
+			else {
+				if(c !== dicSize) return '';
+				entry = w + w.charAt(0);
+			}
+			result += entry;
+			dic[dicSize++] = w + entry.charAt(0);
+			enlargeIn--;
+			w = entry;
+			if(enlargeIn === 0) {
+				enlargeIn = Math.pow(2, numBits);
+				numBits++;
+			}
+		}
+	}
+	return {
+		compact64: str => btoa(data16to8Bit(compress(str))),
+		expand64: str => decompress(data8to16Bit(atob(str))),
+	};
+})();
