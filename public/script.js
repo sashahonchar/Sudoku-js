@@ -404,6 +404,7 @@ const SvgRenderer = (() => {
 		});
 	};
 	P.renderText = function({target, center, width, height, color = '#000', fontSize, text}) {
+		/*
 		this.renderPart({
 			target, type: 'rect',
 			attr: {
@@ -415,19 +416,30 @@ const SvgRenderer = (() => {
 				'height': height * 60 - 1,
 			}
 		});
+		*/
+		//console.log('"%s" > fontSize: %s -> %s', text, fontSize, (Number(fontSize) + 4));
+		/*
 		switch(fontSize) {
+			case 12: fontSize = 16; break;
+			case 16: fontSize = 20; break;
 			case 28: fontSize = 34; break;
 			case 30: fontSize = 34; break;
 		}
+		*/
 		this.renderPart({
 			target, type: 'text',
 			attr: {
-				x: (center[1] + 0.0 * width) * 64 + 2,
-				y: (center[0] + 0.1 * height) * 64 + 2,
+				x: (center[1] + 0.015 * width) * 64,
+				y: (center[0] + 0.05 * height) * 64,
 				'text-anchor': 'middle',
 				'dominant-baseline': 'middle',
 				//style: 'font-size: ' + (fontSize === 28 ? 34 : 24) + 'px;',
-				style: `font-size: ${fontSize}px;`,
+				style: `font-size: ${(Number(fontSize) + 4)}px;`,
+				stroke: '#fff',
+				'stroke-width': '1.5px',
+				'stroke-linecap': 'butt',
+				'stroke-linejoin': 'miter',
+				'paint-order': 'stroke fill',
 			},
 			content: text,
 		});
@@ -1139,10 +1151,10 @@ const App = (() => {
 			puzzle.arrows.forEach(svgRenderer.renderArrow.bind(svgRenderer));
 			[].concat(puzzle.underlays, puzzle.overlays).forEach(part => {
 				var target = puzzle.underlays.indexOf(part) !== -1 ? 'underlay' : 'overlay';
-				if(typeof part.text === 'string' && part.text.length > 0) {
-					svgRenderer.renderText(Object.assign({}, part, {target}));
-				}
-				else { // rect
+				//if(typeof part.text === 'string' && part.text.length > 0) {
+					//svgRenderer.renderText(Object.assign({}, part, {target}));
+				//}
+				//else { // rect
 					var borderColor = part.borderColor || 'none';
 					var backgroundColor = part.backgroundColor || 'none';
 					var opacity = 0.5;
@@ -1155,6 +1167,9 @@ const App = (() => {
 					//if(backgroundColor !== 'none') backgroundColor = App.colorHexToRGBA(backgroundColor, 0.5);
 					//console.log('rect colours:', part, backgroundColor, borderColor, opacity);
 					svgRenderer.renderRect(Object.assign({}, part, {target, borderColor, backgroundColor, opacity}));
+				//}
+				if(typeof part.text === 'string' && part.text.length > 0) {
+					svgRenderer.renderText(Object.assign({}, part, {target}));
 				}
 			});
 			var givens = [], cages = [];
@@ -1836,7 +1851,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 	//app.loadReplay('{"puzzleId":"QbGnr6P2h3","type":"clzw","data":"JIRgrA+gbKUQTKA7BEAhEr4ClwiiCkqAKYQAMoAZgsPOagCKbi4khX0THwqXwAOWvACcTeBBHZeg0RAHAAzA0qLMiRRJABRdWG0AWCAajZlazahFKAxhSAAA"}', {speed: -1});
 	//app.loadReplay('{"puzzleId":"QbGnr6P2h3","type":"clzw","data":"JIRgrA+gDKBs2gOzQEImgKXCWJkxAFMEQAzBAJimgBF0otCyrL9gKAOSgTloswqJOFXjADM1cfWBj+UAKL15AFkwSxIWQjEBjNXvChiBcmPbUQdCBIDC6cEA"}', {speed: -1});
-	app.loadReplay('{"puzzleId":"QbGnr6P2h3","type":"clzw","data":"JIBhH0EYBZUrQCYEgMzhKaHQFYcgBsBA7AQBxQBC8kiAUmCJCImiNCLkSCSJYWCR4mFuESgAZigCmBACYoAxigBGBAIYoAnOFwBhWg2EsQkkDJDyQSkKpAaQu2HRyR0EmAkj5RxUWSilKK6ologACLwbPR07jA+kISQJJDkkNqQWtrAiOiYiMgSiLS5EKLSonKiipBCKp7quACi0ZD0eYUlbJCSkDKQ8pBKkOrCudggHdiFQuqiDUK1QtVClWU4JZvIBeiQzTNTo8OD/b1s3YV7qBOb+DeI/rlkdYjBuaG54bnzuSoghnA2lwUSghGmiFwj0QJDeiG0iA0iFUiBUqAkqF8wFQ2DqqD22J22JE2PKuWkrzkr0UiAO4FQhCo2HI+mwhEBIJmqFBiAAYhAGfRMTj8ejUO5WJJEDJELUctBfPQFeIcgycKgXtjKHjPqhvqhfqh/tjlqg5NBmmRuPp7oQImQ8lRiIKGRrUORUNo9Qajah5GaoCRsetOOJgNBStBkHVoPlw5Nw/gY09oC9WeASCQbWD9HsAcQ6ELJJwI1HY9AK7hoIRUxnw2R0eHiBJlTHceG41GcBGEKGMdJoDzB8gQehCM18BGqJR4UqSNWFRXy4hS2hpHkgAAA="}', {speed: -1});
+	//app.loadReplay('{"puzzleId":"QbGnr6P2h3","type":"clzw","data":"JIBhH0EYBZUrQCYEgMzhKaHQFYcgBsBA7AQBxQBC8kiAUmCJCImiNCLkSCSJYWCR4mFuESgAZigCmBACYoAxigBGBAIYoAnOFwBhWg2EsQkkDJDyQSkKpAaQu2HRyR0EmAkj5RxUWSilKK6ologACLwbPR07jA+kISQJJDkkNqQWtrAiOiYiMgSiLS5EKLSonKiipBCKp7quACi0ZD0eYUlbJCSkDKQ8pBKkOrCudggHdiFQuqiDUK1QtVClWU4JZvIBeiQzTNTo8OD/b1s3YV7qBOb+DeI/rlkdYjBuaG54bnzuSoghnA2lwUSghGmiFwj0QJDeiG0iA0iFUiBUqAkqF8wFQ2DqqD22J22JE2PKuWkrzkr0UiAO4FQhCo2HI+mwhEBIJmqFBiAAYhAGfRMTj8ejUO5WJJEDJELUctBfPQFeIcgycKgXtjKHjPqhvqhfqh/tjlqg5NBmmRuPp7oQImQ8lRiIKGRrUORUNo9Qajah5GaoCRsetOOJgNBStBkHVoPlw5Nw/gY09oC9WeASCQbWD9HsAcQ6ELJJwI1HY9AK7hoIRUxnw2R0eHiBJlTHceG41GcBGEKGMdJoDzB8gQehCM18BGqJR4UqSNWFRXy4hS2hpHkgAAA="}', {speed: -1});
 	//https://cdpn.io/killroy/debug/oNbEjjJ/xnMabZPbWdvr?puzzleid=7FTq4BpLhf
 	/*
 	var puzzle = testPuzzles['fRftpGmpdT'];
