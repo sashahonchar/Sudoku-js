@@ -182,7 +182,7 @@ html, body {
 	position: absolute;
 	content: "";
 	background-color: rgba(255, 215, 0, 0.5);
-  animation: bounce .25s 0s;
+  /*animation: bounce .25s 0s;*/
 }
 .cell:after {
 	display: block;
