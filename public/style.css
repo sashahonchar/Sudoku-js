@@ -76,7 +76,7 @@ html, body {
 	z-index: 2;
 }
 .board svg#overlay {
-	z-index: 5;
+	z-index: 6;
 }
 .timeline {
 	position: relative;
