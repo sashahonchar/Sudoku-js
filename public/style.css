@@ -161,16 +161,16 @@ html, body {
 .pm-7 { left: 80%; top: 50%; }
 .pm-8 { left: 20%; top: 20%; }
 
-.colour-1 { background-color: rgba(255, 255, 255, 0.5); }
-.colour-2 { background-color: rgba(0, 0, 0, 0.5); }
-.colour-3 { background-color: rgba(207, 207, 207, 0.5); }
+.colour-0 { background-color: rgba(255, 255, 255, 0.5); }
+.colour-1 { background-color: rgba(207, 207, 207, 0.5); }
+.colour-2 { background-color: rgba(95, 95, 95, 0.5); }
+.colour-3 { background-color: rgba(0, 0, 0, 0.5); }
 .colour-4 { background-color: rgba(163, 224, 72, 0.5); }
 .colour-5 { background-color: rgba(210, 59, 231, 0.5); }
 .colour-6 { background-color: rgba(235, 117, 50, 0.5); }
 .colour-7 { background-color: rgba(230, 38, 31, 0.5); }
 .colour-8 { background-color: rgba(247, 208, 56, 0.5); }
 .colour-9 { background-color: rgba(52, 187, 230, 0.5); }
-.colour-0 { background-color: rgba(95, 95, 95, 0.5); }
 
 @keyframes bounce {
 	0% { transform: scale(1); opacity: 0; }
@@ -329,11 +329,10 @@ html, body {
 	/*width: 10rem;*/
 }
 .controls-input button {
+	position: relative;
 	width: 3rem;
 }
 .controls-input button[data-control="delete"] {
-	/*width: 65%;*/
-	/*grid-column: span 2;*/
 	width: 6.3rem;
 }
 .controls-aux {
@@ -341,18 +340,10 @@ html, body {
 	flex-direction: row;
 	flex-wrap: wrap;
 	align-items: stretch;
-	/*width: 268px;*/
-	/*margin-top: 8px;*/
-	/*width: 100%;*/
 	margin: 0.5rem -0.15rem;
-	/*width: 20.5rem;*/
 }
 .controls-aux button {
-	/*width: 80px;*/
 	flex: 1 1 45%;
-	/*margin: 20px;*/
-	/*margin: 0.25rem;*/
-	/*margin: 0.15rem;*/
 }
 .mode-normal [data-control="normal"],
 .mode-corner [data-control="corner"],
@@ -363,7 +354,6 @@ html, body {
 {
 	color: #fff;
 	background-color: #6a1b9a;
-	border: none;
 }
 .mode-normal [data-control="normal"]:hover,
 .mode-corner [data-control="corner"]:hover,
@@ -376,7 +366,7 @@ html, body {
 
 .mode-corner .controls-input button.digit,
 .mode-centre .controls-input button.digit
-{ padding: 5px; font-size: 0.9rem; font-weight: 400; }
+{ display: flex; padding: 5px; font-size: 0.9rem; font-weight: 400; }
 .mode-corner button[data-control="1"] { align-items: flex-start; justify-content: flex-start; }
 .mode-corner button[data-control="2"] { align-items: flex-start; justify-content: center; }
 .mode-corner button[data-control="3"] { align-items: flex-start; justify-content: flex-end; }
@@ -389,24 +379,23 @@ html, body {
 .mode-colour button.digit {
 	position: relative;
 	color: transparent;
-	/*outline: 12px solid white;
-	outline-offset: -20px;*/
 }
-.mode-colour button.digit:after {
+.mode-colour button.digit:before {
 	content: '';
 	position: absolute;
 	width: 60%; height: 60%;
+	left: 20%; top: 20%;
 }
-.mode-colour button[data-control="0"]:after { background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0px, rgba(255, 255, 255, 0.9) 4px, rgba(150, 150, 150, 0.9) 4px, rgba(150, 150, 150, 0.9) 8px); }
-.mode-colour button[data-control="1"]:after { background-color: rgb(207, 207, 207); }
-.mode-colour button[data-control="2"]:after { background-color: rgb(95, 95, 95); }
-.mode-colour button[data-control="3"]:after { background-color: rgb(0, 0, 0); }
-.mode-colour button[data-control="4"]:after { background-color: rgb(163, 224, 72); }
-.mode-colour button[data-control="5"]:after { background-color: rgb(210, 59, 231); }
-.mode-colour button[data-control="6"]:after { background-color: rgb(235, 117, 50); }
-.mode-colour button[data-control="7"]:after { background-color: rgb(230, 38, 31); }
-.mode-colour button[data-control="8"]:after { background-color: rgb(247, 208, 56); }
-.mode-colour button[data-control="9"]:after { background-color: rgb(52, 187, 230); }
+.mode-colour button[data-control="0"]:before { background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0px, rgba(255, 255, 255, 0.9) 4px, rgba(150, 150, 150, 0.9) 4px, rgba(150, 150, 150, 0.9) 8px); }
+.mode-colour button[data-control="1"]:before { background-color: rgb(207, 207, 207); }
+.mode-colour button[data-control="2"]:before { background-color: rgb(95, 95, 95); }
+.mode-colour button[data-control="3"]:before { background-color: rgb(0, 0, 0); }
+.mode-colour button[data-control="4"]:before { background-color: rgb(163, 224, 72); }
+.mode-colour button[data-control="5"]:before { background-color: rgb(210, 59, 231); }
+.mode-colour button[data-control="6"]:before { background-color: rgb(235, 117, 50); }
+.mode-colour button[data-control="7"]:before { background-color: rgb(230, 38, 31); }
+.mode-colour button[data-control="8"]:before { background-color: rgb(247, 208, 56); }
+.mode-colour button[data-control="9"]:before { background-color: rgb(52, 187, 230); }
 
 button.confirm-restart, button.confirm-restart:hover {
 	color: white;

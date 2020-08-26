@@ -817,47 +817,18 @@ const Puzzle = (() => {
 				case 'centre': props = ['candidates', 'pencilmarks', 'colour', 'value']; break;
 				case 'colour': props = ['colour', 'value', 'candidates', 'pencilmarks']; break;
 			}
-			//console.log('props:', props);
 			var firstProp = props.length;
 			cells.forEach(cell => {
 				var idx = props.findIndex(prop => cell.hasProp(prop));
 				if(idx > -1) firstProp = Math.min(firstProp, idx);
 				//console.log('cells[%s]:', this.cellsToString(cell), props.map(prop => prop+': '+cell.hasProp(prop)).join(', '), idx);
 			});
-			var clearProp = props[firstProp];
-			console.log('clearProp:', clearProp);
-			cells.forEach(cell => cell.clearProp(clearProp));
+			return props[firstProp];
 		};
 		P.clearCells = function({mode = 'normal', cells = this.selectedCells}) {
-			console.info('Puzzle.clearCells(%s, %s);', mode, this.cellsToString(cells));
-			
-			/*
-			case 'normal': this.clearValue() || this.clearCandidates() || this.clearPencilMarks() || this.clearColour(); break;
-			case 'corner': this.clearValue() || this.clearPencilMarks() || this.clearCandidates() || this.clearColour(); break;
-			case 'centre': this.clearValue() || this.clearCandidates() || this.clearPencilMarks() || this.clearColour(); break;
-			case 'colour': this.clearColour() || this.clearValue() || this.clearCandidates() || this.clearPencilMarks(); break;
-			case 'all': this.clearValue() && this.clearPencilMarks() && this.clearCandidates() && this.clearColour(); break;
-			*/
-			/*
-			var props = [];
-			switch(mode) {
-				case 'normal': props = ['value', 'candidates', 'pencilmarks', 'colour']; break;
-				case 'corner': props = ['value', 'pencilmarks', 'candidates', 'colour']; break;
-				case 'centre': props = ['value', 'candidates', 'pencilmarks', 'colour']; break;
-				case 'colour': props = ['colour', 'value', 'candidates', 'pencilmarks']; break;
-			}
-			console.log('props:', props);
-			cells.forEach(cell => {
-				console.log('cells[%s]:', this.cellsToString(cell), props,
-										props.map(prop => cell.hasProp(prop)),
-										props.findIndex(prop => cell.hasProp(prop))
-									 );
-			});
-			*/
-			console.log('findHighestCellProp:', this.findHighestCellProp(cells, mode));
-			
-			//cells.forEach(cell => cell.clear({mode}));
-			
+			//console.info('Puzzle.clearCells(%s, %s);', mode, this.cellsToString(cells));
+			var clearProp = this.findHighestCellProp(cells, mode);
+			cells.forEach(cell => cell.clearProp(clearProp));
 		};
 		P.exec = function(action) {
 			var {type, arg} = this.parseAction(action), selectedCells = this.selectedCells;
@@ -911,7 +882,7 @@ const Puzzle = (() => {
 		P.act = function(action) {
 			action = this.parseAction(action);
 			var act = this.actionToString(action);
-			console.info('Puzzle.act("%s");', act, action);
+			//console.info('Puzzle.act("%s");', act, action);
 			if(this.errorsVisible && !Puzzle.isSelection(action.type)) {
 				this.cells.forEach(cell => cell.error(false));
 			}
@@ -1091,7 +1062,7 @@ const App = (() => {
 		);
 	}
 	var P = Object.assign(App.prototype, {constructor: App});
-	App.VERSION = '0.15.2';
+	App.VERSION = '0.16.0';
 	App.reDigit = /^(?:Numpad|Digit|btn-)([0-9])$/;
 	App.Modes = Puzzle.Modes;
 	App.ModeToAction = {
@@ -1388,14 +1359,8 @@ const App = (() => {
 				Math.min(gameElem.clientWidth, gameElem.clientHeight),
 				Math.max(boardElem.clientWidth, boardElem.clientHeight)
 			);
-			console.log('gameElem.clientHeight:', gameElem.clientHeight);
-			console.log('boardElem.clientWidth:', boardElem.clientWidth);
-			console.log('boardElem.clientHeight:', boardElem.clientHeight);
-			console.log('gameSize:', gameSize);
-			console.log('gameSpace:', gameSpace);
 			var gridScale = gameSpace / gameSize;
 			gridElem.style.transform = `scale(${gridScale})`;
-
 			var titleScale = Math.min(1, this.getContentWidth(headerElem) / Math.max(titleElem.clientWidth, authorElem.clientWidth));
 			titleElem.style.transform = `translate(-50%, 0) scale(${titleScale}, 1)`;
 			authorElem.style.transform = `translate(-50%, 0) scale(${titleScale}, 1)`;
@@ -1494,14 +1459,35 @@ const App = (() => {
 				if(cell) this.smartSelectCell(cell, event.ctrlKey);
 			}
 		};
-		
 		P.handleCancel = function(event) {
 			console.info('App.handleCancel:', event.type, event, event.target);
 			if(this.isDragging === false) this.deselect();
 		};
+		P.xyToRC = function(x, y) {
+			var grid = this.grid, tlCell = grid.getCell(0, 0), brCell = grid.getCell(grid.rows - 1, grid.cols - 1);
+			var tlRect = tlCell.elem.getBoundingClientRect(), brRect = brCell.elem.getBoundingClientRect();
+			return {
+				r: Math.floor((y - tlRect.y) / tlRect.height),
+				c: Math.floor((x - tlRect.x) / tlRect.width)
+			};
+		};
+		P.stepPoints = function(x0, y0, x1, y1, handler) {
+			var dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
+			var sx = (x0 < x1) ? 1 : -1, sy = (y0 < y1) ? 1 : -1;
+			var err = dx - dy;
+
+			while(true) {
+				//setPixel(x0, y0); // Do what you need to for this
+				handler(x0, y0);
+				if((x0 === x1) && (y0 === y1)) break;
+				var e2 = 2*err;
+				if(e2 > -dy) { err -= dy; x0  += sx; }
+				if(e2 < dx) { err += dx; y0  += sy; }
+			}
+		};
 		P.handleDragStart = function(event) {
 			if(event.target.nodeName === 'BUTTON') return;
-			console.info('App.handleDragStart(event);');
+			//console.info('App.handleDragStart(event);');
 			this.isDragging = true;
 			this.handleCancelRestartPuzzle();
 			// If clicking button, don't drag
@@ -1509,39 +1495,30 @@ const App = (() => {
 			// If holding CTRL, don't deselect
 			if(!event.ctrlKey) this.deselect();
 			this.selecting = true;
-			var cell = this.grid.elemToCell(event.target);
+			this.prevDragEvent = event;
+			var prev = this.prevDragEvent, prevRC = this.xyToRC(prev.clientX, prev.clientY);
+			var cell = this.grid.getCell(prevRC.r, prevRC.c);
 			if(cell) {
 				if(event.ctrlKey && cell.hasState('highlight')) this.selecting = false;
-				//cell.highlight(this.selecting);
-				if(this.selecting) {
-					this.select(cell);
-				}
-				else {
-					this.deselect(cell);
-				}
+				this.selecting ? this.select(cell) : this.deselect(cell);
 			}
 		};
 		P.handleDragEnd = function(event) {
 			//console.info('App.handleDragEnd(event);', event);
 			this.isDragging = false;
-			if(this.selecting !== undefined) {
-				//var nextSelectedCells = this.grid.getCellList().filter(cell => cell.hasState('highlight'));
-				//this.act({type: 'select', arg: nextSelectedCells});
-				this.selecting = undefined;
-			}
-			//event.preventDefault();
+			this.selecting = undefined;
 		};
 		P.handleDragMove = function(event) {
 			if(this.isDragging !== true) return;
 			//console.info('App.handleDragMove(event);', this.selecting);
-			var eventTarget = this.getEventTarget(event);
 			if(this.selecting !== undefined) {
-				var cell = this.grid.elemToCell(eventTarget);
-				if(cell) {
-					//cell.highlight(this.selecting);
-					this.select(cell);
-				}
+				var prev = this.prevDragEvent, prevRC = this.xyToRC(prev.clientX, prev.clientY), nextRC = this.xyToRC(event.clientX, event.clientY);
+				this.stepPoints(prevRC.r, prevRC.c, nextRC.r, nextRC.c, (r, c) => {
+					var cell = this.grid.getCell(r, c);
+					if(cell) this.selecting ? this.select(cell) : this.deselect(cell);
+				});
 			}
+			this.prevDragEvent = event;
 		};
 		P.doPressDigit = function(digit) {
 			//console.log('App.doPressDigit(%s); mode: %s', digit, this.mode);
@@ -1581,6 +1558,7 @@ const App = (() => {
 				var mode = this.prevMode || this.mode;
 				var nextMode = modes[(modes.indexOf(mode) + (event.shiftKey ? 3 : 1)) % modes.length];
 				this.changeMode(nextMode);
+				event.preventDefault();
 			}
 			else if(['Backspace', 'Delete'].includes(event.key)) {
 				this.act({type: 'clear', arg: this.mode});
