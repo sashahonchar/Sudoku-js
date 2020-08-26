@@ -1062,7 +1062,7 @@ const App = (() => {
 		);
 	}
 	var P = Object.assign(App.prototype, {constructor: App});
-	App.VERSION = '0.16.1';
+	App.VERSION = '0.16.2';
 	App.reDigit = /^(?:Numpad|Digit|btn-)([0-9])$/;
 	App.Modes = Puzzle.Modes;
 	App.ModeToAction = {
@@ -1175,17 +1175,17 @@ const App = (() => {
 
 			puzzle.cages.forEach(cage => {
 				if(cage.cells.length === 0) {
-					if(cage.value.match(reTitle)) {
+					if(typeof cage.value === 'string' && cage.value.match(reTitle)) {
 						console.info('Title found in cage: "%s"', cage.value.replace(reTitle, '$1'));
 						titleElem.textContent = cage.value.replace(reTitle, '$1');
 						infoElem.style.display = 'block';
 					}
-					else if(cage.value.match(reAuthor)) {
+					else if(typeof cage.value === 'string' && cage.value.match(reAuthor)) {
 						console.info('Author found in cage: "%s"', cage.value.replace(reAuthor, '$1'));
 						authorElem.textContent = 'by ' + cage.value.replace(reAuthor, '$1');
 						infoElem.style.display = 'block';
 					}
-					else if(cage.value.match(reRules)) {
+					else if(typeof cage.value === 'string' && cage.value.match(reRules)) {
 						console.info('Rules found in cage:\n', cage.value.replace(reRules, '$1'));
 						var rulesStr = cage.value.replace(reRules, '$1').replace('\\n', '<br />');
 						//rulesStr = `Normal sudoku rules apply. There are some Killer Sudoku clues given. They are part of a group of connected cells and give the sum of the digits in this group. Digits may not repeat within these groups and groups for different clues cannot overlap. Each group is completely contained in one coloured orbit of the puzzle grid. Otherwise, placement and size of the groups is not known. There may be cells that are not part of any group.`;
