@@ -282,7 +282,7 @@ const Grid = (() => {
 		const size = 64,
 					width = cols * size,
 					height = rows * size,
-					margin = 2 * size;
+					margin = 1.5 * size;
 		this.clearCells();
 		this.rows = rows;
 		this.cols = cols;
@@ -1189,29 +1189,49 @@ const App = (() => {
 				if(cells.length === 9) cage.sum = 45;
 				cages.push(cage);
 			});
+
+			var infoElem = document.querySelector('.controls-info');
+			var headerElem = document.querySelector('.puzzle-header');
+			var titleElem = document.querySelector('.puzzle-title');
+			var authorElem = document.querySelector('.puzzle-author');
+			var rulesElem = document.querySelector('.puzzle-rules');
+			var reTitle = /^title:\s*(.*)/;
+			var reAuthor = /^author:\s*(.*)/;
+			var reRules = /^rules:\s*(.*)/;
+			infoElem.style.display = 'none';
+			headerElem.style.height = '4em';
+			headerElem.style.opacity = '1';
+
 			puzzle.cages.forEach(cage => {
 				if(cage.cells.length === 0) {
-					var headerElem = document.querySelector('.puzzle-header');
-					var titleElem = document.querySelector('.puzzle-title');
-					var authorElem = document.querySelector('.puzzle-author');
-					var rulesElem = document.querySelector('.puzzle-rules');
-					var reTitle = /^title:\s*(.*)/;
-					var reAuthor = /^author:\s*(.*)/;
-					var reRules = /^rules:\s*(.*)/;
 					if(cage.value.match(reTitle)) {
 						console.info('Title found in cage: "%s"', cage.value.replace(reTitle, '$1'));
 						titleElem.textContent = cage.value.replace(reTitle, '$1');
-						headerElem.style.display = "block";
+						infoElem.style.display = 'block';
 					}
 					else if(cage.value.match(reAuthor)) {
 						console.info('Author found in cage: "%s"', cage.value.replace(reAuthor, '$1'));
-						authorElem.textContent = cage.value.replace(reAuthor, '$1');
-						headerElem.style.display = "block";
+						authorElem.textContent = 'by ' + cage.value.replace(reAuthor, '$1');
+						infoElem.style.display = 'block';
 					}
 					else if(cage.value.match(reRules)) {
 						console.info('Rules found in cage:\n', cage.value.replace(reRules, '$1'));
-						rulesElem.innerHTML = cage.value.replace(reRules, '$1').replace('\\n', '<br />');
-						rulesElem.style.display = "block";
+						var rulesStr = cage.value.replace(reRules, '$1').replace('\\n', '<br />');
+						//rulesStr = `Normal sudoku rules apply. There are some Killer Sudoku clues given. They are part of a group of connected cells and give the sum of the digits in this group. Digits may not repeat within these groups and groups for different clues cannot overlap. Each group is completely contained in one coloured orbit of the puzzle grid. Otherwise, placement and size of the groups is not known. There may be cells that are not part of any group.`;
+						rulesElem.innerHTML = rulesStr;
+						/*
+						var maxLength = 120;
+						if(rulesStr.length > maxLength) {
+							var trimmed = rulesStr.substr(0, maxLength);
+							var reTrim = /\S(?=\s*(?!.*\s))/g;
+							reTrim.exec(trimmed); 
+							trimmed = trimmed.substr(0, reTrim.lastIndex);
+							console.log('Trimmed: "%s"', trimmed.length, trimmed);
+							rulesElem.innerHTML = `<details><summary>${trimmed}</summary>${rulesStr.substr(trimmed.length)}</details>`;
+						}
+						*/
+						infoElem.style.display = 'block';
+						rulesElem.style.display = 'block';
 					}
 					else {
 						console.warn('Cage without cells:', cage);
@@ -1347,18 +1367,30 @@ const App = (() => {
 				.then(() => this.puzzle.replayPlay({actions}, opts));
 		};
 	// Rendering
+		P.getContentWidth = function(elem) {
+			var style = window.getComputedStyle(elem),
+				width = elem.offsetWidth,
+				padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+			return width - padding;
+		};
 		P.resize = function() {
 			//console.info('App.resize();');
 			var gameElem = document.querySelector('.game'),
 				boardElem = document.querySelector('.board'),
 				gridElem = document.querySelector('.grid'),
-				svgElem = document.querySelector('svg#underlay');
+				svgElem = document.querySelector('svg#underlay'),
+				headerElem = document.querySelector('.puzzle-header'),
+				titleElem = document.querySelector('.puzzle-title'),
+				authorElem = document.querySelector('.puzzle-author')
+				;
 			var gameSize = Math.max(svgElem.clientWidth, svgElem.clientHeight) - 64;
 			var gameSpace = Math.min(gameElem.clientHeight, Math.max(boardElem.clientWidth, boardElem.clientHeight));
-			//console.log('gameSize max(%s, %s) = %s', svgElem.clientWidth, svgElem.clientHeight, gameSize);
-			//console.log('gameSpace min(%s, max(%s, %s)) = %s', gameElem.clientHeight, boardElem.clientWidth, boardElem.clientHeight, gameSpace);
-			var scale = gameSpace / gameSize;
-			gridElem.style.transform = `scale(${scale})`;
+			var gridScale = gameSpace / gameSize;
+			gridElem.style.transform = `scale(${gridScale})`;
+
+			var titleScale = Math.min(1, this.getContentWidth(headerElem) / Math.max(titleElem.clientWidth, authorElem.clientWidth));
+			titleElem.style.transform = `translate(-50%, 0) scale(${titleScale}, 1)`;
+			authorElem.style.transform = `translate(-50%, 0) scale(${titleScale}, 1)`;
 		};
 	// Event Handlers
 		P.attachHandlers = function() {
@@ -1635,10 +1667,14 @@ const App = (() => {
 	return App;
 })();
 
+document.querySelector('.controls-info').style.display = 'none';
+
 document.addEventListener('DOMContentLoaded', () => {
 	//document.head.querySelector('link[rel="shortcut icon"]').setAttribute('href', 'https://app.crackingthecryptic.com/favicon.ico');
 	var headIcon = document.head.querySelector('link[rel="shortcut icon"]');
 	if(headIcon) headIcon.setAttribute('href', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAABXFBMVEX////aGk0daJs8fakaZpnhOmfcIVRFg67+/f5nmLvjRG7cI1XbHlDnaovkRnAuc6LhPGjdJ1g0d6Ynb6DgNmP7/P3++vvw9fj3zdhUjrQ5e6gjbZ4gap3qfZrfMmD2+fv+9vj98/XM3emxy92Ut9DztMTwnbNEgq1AgKswdaQqcqHob4/iQWveLl3n7/T87/Pj7PPd6PD75+zC1uS40OD40tyiwdWZutKCrMh/qcd8qMZtnr/xo7ddkrdOiLBIhrChh6iqep7mZYflVXviT3fiS3Tq8PX64uj63+bF2Oanxdn2yNT2xNGHpMHzrsBwn8Dyrb95lribl7Xuk6zukartj6jMiaZFeqaEgKVifKXuiaNveKHNgaBHc6B7dp5Sb53peZbnd5aOa5ReZJLcb5HpcJCiZ4+yZo2eYYukXojcYIW1WIHLWIC9T3rRR3LVQm3lPmrSPGnTM2LXMF5v7Cm9AAABh0lEQVQ4y72S51PCQBDFs5dLciQxjQBSBRGRZu+CdHvvvfde/v8ZwUkAB/KNcb/97r3budt9VJtrvpOQkUFrfUPQ9zI4tmhp8EPOi73uKSvdWYDzqAfHpxzNWihEkRUeUsfYzsmYGyGUa65R7y3rkQIIUkDI0zjGeZFtXLOHGwxKQBIgqYC6HezqsWO6D2E5467rRAHQeVG8Ha5S/zrycWfvpbzT1IfcXyqvQqnTPOiexa8sA+Uxg6ezTzroa6Te0hF+YRmRTRg4g0+fH1f/fquDZRRp1wDXJKKRrdlwNFBDupWBr8E/GBxLWiuDkDYn1UPLTYbLh6tv8Btgi/todGjO0ZxlfFO6MGhUwzS6FhPDptw/U9mGZ/+jdsd1EJXvFFB3glUy9xkN1TvyN5/VNAATISTswVolEZzMNQZGFPwSpCQVilvoN1MTWt9k46PGFihnOgVMJRT3Hhwbd1CDQ83BHEiwYpJ5Q26XZeyLAqgnaJqyqkgAkrmsb4KyrOXeYNdoN6HaWj9O3CwsngKXCwAAAABJRU5ErkJggg==');
+
+
 	var app = window.app = new App({});
 	// Plain: https://cracking-the-cryptic.web.app/sudoku/FLFpq4pMH3
 	var plainPuzzle = {

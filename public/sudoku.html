@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en" >
 <head>
-  <meta charset="UTF-8">
-	<title>CTC App 0.14.3 alpha - Cracking The Cryptic</title>
+	<meta charset="UTF-8">
+	<title>CTC App 0.15.0 alpha - Cracking The Cryptic</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
 	<meta name="HandheldFriendly" content="true" />
-  <link rel="stylesheet" href="/style.css">
+	<link rel="stylesheet" href="/style.css">
 </head>
 <body>
 <!-- partial:index.partial.html -->
@@ -47,10 +47,10 @@
 							<path d="M0 25 L30,25 L40,50 L30,75 L0,75 L10,50 L0,25" />
 						</g>
 					</svg>
-					<div class="puzzle-title">Puzzle Title</div>
-					<div class="puzzle-author">Puzzle Author</div>
+					<div class="puzzle-title">Sudoku</div>
+					<div class="puzzle-author"></div>
 				</div>
-				<div class="puzzle-rules">Puzzle Rules</div>
+				<div class="puzzle-rules"></div>
 			</div>
 			<div class="controls-main mode-normal">
 				<div class="controls-mode">
@@ -101,7 +101,10 @@
 	gtag('config', 'UA-173937060-1');
 </script>
 <!-- partial -->
-  <script  src="/script.js"></script>
+	<script>
+		document.querySelector('.controls-info').style.display = 'none';
+	</script>
+	<script src="/script.js"></script>
 
 </body>
 </html>
