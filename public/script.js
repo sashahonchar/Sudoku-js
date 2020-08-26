@@ -1062,7 +1062,7 @@ const App = (() => {
 		);
 	}
 	var P = Object.assign(App.prototype, {constructor: App});
-	App.VERSION = '0.16.3';
+	App.VERSION = '0.16.4';
 	App.reDigit = /^(?:Numpad|Digit|btn-)([0-9])$/;
 	App.Modes = Puzzle.Modes;
 	App.ModeToAction = {
@@ -1475,7 +1475,6 @@ const App = (() => {
 			var dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
 			var sx = (x0 < x1) ? 1 : -1, sy = (y0 < y1) ? 1 : -1;
 			var err = dx - dy;
-
 			while(true) {
 				//setPixel(x0, y0); // Do what you need to for this
 				handler(x0, y0);
@@ -1495,8 +1494,8 @@ const App = (() => {
 			// If holding CTRL, don't deselect
 			if(!event.ctrlKey) this.deselect();
 			this.selecting = true;
-			this.prevDragEvent = event;
-			var prev = this.prevDragEvent, prevRC = this.xyToRC(prev.clientX, prev.clientY);
+			this.prevInputPos = Object.assign({}, this.inputPos);
+			var pos = this.inputPos, prevRC = this.xyToRC(pos.x, pos.y);
 			var cell = this.grid.getCell(prevRC.r, prevRC.c);
 			if(cell) {
 				if(event.ctrlKey && cell.hasState('highlight')) this.selecting = false;
@@ -1512,13 +1511,15 @@ const App = (() => {
 			if(this.isDragging !== true) return;
 			//console.info('App.handleDragMove(event);', this.selecting);
 			if(this.selecting !== undefined) {
-				var prev = this.prevDragEvent, prevRC = this.xyToRC(prev.clientX, prev.clientY), nextRC = this.xyToRC(event.clientX, event.clientY);
+				var pos = this.prevInputPos, prevRC = this.xyToRC(pos.x, pos.y);
+				var prevRC = this.xyToRC(this.prevInputPos.x, this.prevInputPos.y),
+					nextRC = this.xyToRC(this.inputPos.x, this.inputPos.y);
 				this.stepPoints(prevRC.r, prevRC.c, nextRC.r, nextRC.c, (r, c) => {
 					var cell = this.grid.getCell(r, c);
 					if(cell) this.selecting ? this.select(cell) : this.deselect(cell);
 				});
 			}
-			this.prevDragEvent = event;
+			this.prevInputPos = Object.assign({}, this.inputPos);
 		};
 		P.doPressDigit = function(digit) {
 			//console.log('App.doPressDigit(%s); mode: %s', digit, this.mode);
