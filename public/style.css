@@ -137,18 +137,26 @@ html, body {
 	z-index: 5;
 	top: 2px; left: 2px;
 	font-size: 1rem;
-	/*background-color: #fff;*/
 	text-shadow:
-		-1px -1px 1px #fff, 0px -1px 1px #fff, 1px -1px 1px #fff,
-		-1px  0px 1px #fff, 0px  0px 1px #fff, 1px  0px 1px #fff,
-		-1px  1px 1px #fff, 0px  1px 1px #fff, 1px  1px 1px #fff;
+		-2px -2px 1px #fff, 0px -2px 1px #fff, 2px -2px 1px #fff,
+		-2px  0px 1px #fff, 0px  0px 1px #fff, 2px  0px 1px #fff,
+		-2px  2px 1px #fff, 0px  2px 1px #fff, 2px  2px 1px #fff;
+	background-color: rgba(255,255,255,0.8);
 }
-.cell-candidate { font-size: 0.9rem; }
+.cell-candidate {
+	font-size: 0.9rem; 
+	z-index: 6;
+}
 .cell-pencilmark {
 	position: absolute;
+	z-index: 6;
 	left: 50%; top: 50%;
 	transform: translate(-50%, -50%);
 	color: #1d6ae5;
+	text-shadow:
+		-1px -1px 1px rgba(255,255,255,0.6), 0px -1px 1px rgba(255,255,255,0.6), 1px -1px 1px rgba(255,255,255,0.6),
+		-1px  0px 1px rgba(255,255,255,0.6), 0px  0px 1px rgba(255,255,255,0.6), 1px  0px 1px rgba(255,255,255,0.6),
+		-1px  1px 1px rgba(255,255,255,0.6), 0px  1px 1px rgba(255,255,255,0.6), 1px  1px 1px rgba(255,255,255,0.6);
 }
 .cell-pencilmark { font-size: 0.9rem; }
 .pm-0 { left: 20%; top: 20%; }
@@ -199,7 +207,7 @@ html, body {
 }
 .cell-border {
 	position: absolute;
-	z-index: 6;
+	z-index: 4;
 	/*outline: 1px solid black; outline-offset: -0.5px;*/
 	top: 0; left: 0;
 	/*width: 64px; height: 64px;*/

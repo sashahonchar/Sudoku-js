@@ -1062,7 +1062,7 @@ const App = (() => {
 		);
 	}
 	var P = Object.assign(App.prototype, {constructor: App});
-	App.VERSION = '0.16.2';
+	App.VERSION = '0.16.3';
 	App.reDigit = /^(?:Numpad|Digit|btn-)([0-9])$/;
 	App.Modes = Puzzle.Modes;
 	App.ModeToAction = {
