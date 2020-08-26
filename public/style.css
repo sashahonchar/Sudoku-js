@@ -22,14 +22,13 @@ html, body {
 }
 .topbar {
 	background-color: #186699;
+	height: 50px; line-height: 50px;
+	font-size: 1.3rem;
 }
 .menu {
-	height: 50px;
 	max-width: 1200px;
 	margin: 0 auto;
 	padding: 0 2em;
-	line-height: 50px;
-	font-size: 1.3rem;
 	color: #fff;
 }
 .menu a {
@@ -227,14 +226,14 @@ html, body {
 .controls-info {
 	display: flex;
 	flex-direction: column;
-	margin-bottom: 0.25rem;
+	overflow: hidden;
 }
 .puzzle-header {
 	position: relative;
 	display: flex;
 	flex-direction: column;
 	height: 4rem;
-	width: 16rem;
+	/*width: 16rem;*/
 	margin: 0 2rem;
 	padding: 0 0.5rem;
 	background: red;
@@ -269,7 +268,7 @@ html, body {
 	top: 50%;
 }
 .puzzle-rules {
-	width: 20rem;
+	/*width: 20rem;*/
 	border-radius: 1rem;
 	padding: 1rem;
 	font-size: 1.1rem;
@@ -278,13 +277,13 @@ html, body {
 	display: none;
 }
 .controls button {
-	display: inline-flex;
+	/*display: inline-flex;*/
 	align-items: center;
 	justify-content: center;
 	height: 3rem;
 	/*margin-bottom: 0.2rem;*/
 	margin: 0.15rem;
-	padding: 0;
+	padding: 0 0.25rem;
 	font-size: 1.3rem;
 	font-weight: 500;
 	border: 1px solid #ccc;
@@ -298,58 +297,62 @@ html, body {
 .controls button:focus { outline-color: rgba(0, 0, 0, 0.3); }
 .controls-main {
 	display: flex;
-	align-items: center;
+	flex-direction: row;
+	align-items: start;
 	justify-content: space-between;
-	width: 20rem;
+	margin: 0.25rem 0 0 0;
+	/*width: 20rem;*/
 }
 .controls-mode {
 	display: flex;
-	flex-direction: row;
+	flex: 2 1 auto;
+	flex-direction: column;
 	flex-wrap: wrap;
 	justify-content: space-between;
-	width: 8.5rem;
-	margin: 0 -0.15rem;
+	/*width: 8.5rem;*/
+	margin: -0.15rem 0.5rem -0.15rem 0;
 }
 .controls-mode button {
-	/*width: 30%;*/
-	flex: 1 1 2rem;
 }
 .controls-input {
 	display: flex;
-	flex-direction: row;
-	flex-wrap: wrap;
-	justify-content: space-between;
+	flex-direction: column;
+	/*width: 10rem;*/
 	/*width: 160px;*/
-	width: 11.5rem;
-	margin: 0 -0.15rem;
+	/*width: 11.5rem;*/
+	margin: -0.15rem;
+}
+.controls-input .button-row {
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: row;
+	/*width: 10rem;*/
 }
 .controls-input button {
-	/*width: 30%;*/
-	flex: 1 1 3.5rem;
+	width: 3rem;
 }
 .controls-input button[data-control="delete"] {
 	/*width: 65%;*/
-	flex: 1 1 7.35rem;
+	/*grid-column: span 2;*/
+	width: 6.3rem;
 }
 .controls-aux {
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
-	justify-content: space-between;
+	align-items: stretch;
 	/*width: 268px;*/
 	/*margin-top: 8px;*/
 	/*width: 100%;*/
 	margin: 0.5rem -0.15rem;
-	width: 20.5rem;
-}
-.controls-aux > *:not(:last-child) {
+	/*width: 20.5rem;*/
 }
 .controls-aux button {
 	/*width: 80px;*/
-	flex: 1 1 40%;
+	flex: 1 1 45%;
 	/*margin: 20px;*/
 	/*margin: 0.25rem;*/
-	margin: 0.15rem;
+	/*margin: 0.15rem;*/
 }
 .mode-normal [data-control="normal"],
 .mode-corner [data-control="corner"],
@@ -411,6 +414,10 @@ button.confirm-restart, button.confirm-restart:hover {
 }
 
 
+
+@media screen and (orientation:landscape) {
+}
+
 @media screen and (orientation:portrait) {
 	.game {
 		flex-direction: column;
@@ -422,19 +429,48 @@ button.confirm-restart, button.confirm-restart:hover {
 	}
 	.controls-info {
 		margin: 0 0.5rem 0 0;
+		width: 0; margin: 0;
 	}
 	.controls-main {
+		flex: 1 1 auto;
 		margin: 0 0.5rem;
 	}
 	.controls-aux {
-		width: 10rem;
-		margin: 0 -0.15rem;
+		flex: 1 1 auto;
+		flex-direction: column;
+		/*width: 10rem;*/
+		margin: 0 0.35rem 0 0;
 	}
 	.controls-aux button {
-		flex: 1 1 100%;
+		flex: 1 1 auto;
 	}
 }
-@media screen and (orientation:landscape) {
+
+@media screen and (orientation:landscape) and (max-height: 480px) {
+	.topbar { height: 25px; line-height: 25px; font-size: 1rem; }
+	.menu-logo { width: 66px; height: 25px; }
+	.topbar { height: 30px; }
+	.controls-info {
+		margin: 0 0.5rem 0 0;
+		width: 0; height: 0; margin: 0;
+	}
+	.controls button {
+		height: 2.5rem;
+		font-size: 1rem;
+	}
+	.controls-input button { width: 2.5rem; }
+	.controls-input button[data-control="delete"] { width: 5.3rem; }
+}
+
+@media screen and (orientation:portrait) and (max-width: 480px) {
+	.topbar { height: 25px; line-height: 25px; font-size: 1rem; }
+	.menu-logo { width: 66px; height: 25px; }
+	.controls button {
+		height: 2.5rem;
+		font-size: 1rem;
+	}
+	.controls-input button { width: 2.5rem; }
+	.controls-input button[data-control="delete"] { width: 5.3rem; }
 }
 
 /*

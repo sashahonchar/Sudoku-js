@@ -1091,7 +1091,7 @@ const App = (() => {
 		);
 	}
 	var P = Object.assign(App.prototype, {constructor: App});
-	App.VERSION = '0.15.1';
+	App.VERSION = '0.15.2';
 	App.reDigit = /^(?:Numpad|Digit|btn-)([0-9])$/;
 	App.Modes = Puzzle.Modes;
 	App.ModeToAction = {
@@ -1384,7 +1384,15 @@ const App = (() => {
 				authorElem = document.querySelector('.puzzle-author')
 				;
 			var gameSize = Math.max(svgElem.clientWidth, svgElem.clientHeight) - 64;
-			var gameSpace = Math.min(gameElem.clientHeight, Math.max(boardElem.clientWidth, boardElem.clientHeight));
+			var gameSpace = Math.min(
+				Math.min(gameElem.clientWidth, gameElem.clientHeight),
+				Math.max(boardElem.clientWidth, boardElem.clientHeight)
+			);
+			console.log('gameElem.clientHeight:', gameElem.clientHeight);
+			console.log('boardElem.clientWidth:', boardElem.clientWidth);
+			console.log('boardElem.clientHeight:', boardElem.clientHeight);
+			console.log('gameSize:', gameSize);
+			console.log('gameSpace:', gameSpace);
 			var gridScale = gameSpace / gameSize;
 			gridElem.style.transform = `scale(${gridScale})`;
 
