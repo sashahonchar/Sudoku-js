@@ -55,6 +55,27 @@
 					</thead>
 					<tbody>
 						<tr>
+							<td>Dragging to deselect fails</td>
+							<td>Dragging from a selected cell should deselect</td>
+							<td>Fixed</td>
+							<td>Clicking to deselect still functions</td>
+							<td>ahaupt</td>
+						</tr>
+						<tr>
+							<td>Layout does not resize correctly for large grids</td>
+							<td>Layout should scale to keep the grid and controls in view</td>
+							<td>Fixed</td>
+							<td>See puzzle <a href="/sudoku/4R7H4Nh22N">4R7H4Nh22N</a></td>
+							<td>bakpao</td>
+						</tr>
+						<tr>
+							<td>When drag-selecting quickly some cells can be skipped</td>
+							<td>All cells should be selected, even when moving the mouse quickly</td>
+							<td>Fixed</td>
+							<td>Draw line between move event coordinates</td>
+							<td>Alice</td>
+						</tr>
+						<tr>
 							<td>Puzzle is reset if page is accidentally closed</td>
 							<td>Browser should confirm if page should be closed</td>
 							<td>Pending</td>
@@ -63,24 +84,10 @@
 						</tr>
 						<tr>
 							<td>Colours and visual elements don't always overlap well</td>
-							<td>Adjsut colous and transparency for better visibility</td>
+							<td>Adjust colous and transparency for better visibility</td>
 							<td>Pending</td>
 							<td>Check Nurikabe Sudoku</td>
 							<td>Alice</td>
-						</tr>
-						<tr>
-							<td>When drag-selecting quickly some cells can be skipped</td>
-							<td>All cells should be selected, even when moving the mouse quickly</td>
-							<td>Pending</td>
-							<td>Draw line between move event coordinates</td>
-							<td>Alice</td>
-						</tr>
-						<tr>
-							<td>Dragging to deselect fails</td>
-							<td>Dragging from a selected cell should deselect</td>
-							<td>Pending</td>
-							<td>Clicking to deselect still functions</td>
-							<td>ahaupt</td>
 						</tr>
 						<tr>
 							<td>Shift+7 on german keyboard and Firefox launches quickserch</td>
@@ -104,11 +111,18 @@
 							<td>bakpao</td>
 						</tr>
 						<tr>
-							<td>Layout does not resize correctly for large grids</td>
-							<td>Layout should scale to keep the grid and controls in view</td>
+							<td>Some symbol backdrops are inconsistent</td>
+							<td>Symbols should have an outline to make them readable, instead of a box background.</td>
 							<td>Pending</td>
-							<td>See puzzle <a href="/sudoku/4R7H4Nh22N">4R7H4Nh22N</a></td>
-							<td>bakpao</td>
+							<td><img height="50px" src="https://cdn.discordapp.com/attachments/737014292494286884/748146485438185472/very_minor.png"></td>
+							<td>ahaupt</td>
+						</tr>
+						<tr>
+							<td>Scaling sometimes causes line width glitches</td>
+							<td>Grid lines should be of a consistent width</td>
+							<td>Pending</td>
+							<td><img height="50px" src="https://cdn.discordapp.com/attachments/737014292494286884/748147697290051595/very_minor.png"></td>
+							<td>ahaupt</td>
 						</tr>
 					</tbody>
 				</table>
@@ -126,16 +140,18 @@
 					</thead>
 					<tbody>
 						<tr>
+							<td>Taps feel sluggish</td>
+							<td>Taps should have immediate effects</td>
+							<td>Fixed</td>
+							<td>This was due to 300ms delay</td>
+							<td>Sven</td>
+						</tr>
+						<tr>
 							<td>Double-tap zooms</td>
 							<td>Double-tap has no effect except for selection</td>
 							<td>Pending</td>
 							<td></td>
-						</tr>
-						<tr>
-							<td>Taps feel sluggish</td>
-							<td>Taps should have immediate effects</td>
-							<td>Pending</td>
-							<td></td>
+							<td>Sven</td>
 						</tr>
 					</tbody>
 				</table>
